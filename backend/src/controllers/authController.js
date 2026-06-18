@@ -81,6 +81,7 @@ export const registerTenant = async (req, res) => {
         name: user.name,
         email: user.email,
         tenantId: user.tenantId,
+        companyName: newTenant.companyName,
         role: user.role
       }
     });
@@ -116,6 +117,9 @@ export const login = async (req, res) => {
     // Set cookie
     setRefreshTokenCookie(res, refreshToken);
 
+    // Fetch the tenant to get the company name
+    const tenant = await Tenant.findOne({ tenantId: user.tenantId });
+
     res.json({
       message: "Login successful",
       accessToken,
@@ -124,6 +128,7 @@ export const login = async (req, res) => {
         name: user.name,
         email: user.email,
         tenantId: user.tenantId,
+        companyName: tenant ? tenant.companyName : "Unknown Workspace",
         role: user.role
       }
     });
