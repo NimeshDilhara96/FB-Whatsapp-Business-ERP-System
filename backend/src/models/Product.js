@@ -2,8 +2,10 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
-    businessId: {
+    tenantId: {
       type: String,
+      required: true,
+      index: true,
     },
 
     name: {

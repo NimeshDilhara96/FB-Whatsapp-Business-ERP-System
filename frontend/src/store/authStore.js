@@ -1,16 +1,23 @@
 import { create } from "zustand";
+import { logoutUser } from "../services/authService";
 
 export const useAuthStore = create((set) => ({
   user: null,
-  token: localStorage.getItem("token") || null,
+  accessToken: localStorage.getItem("accessToken") || null,
 
-  login: (user, token) => {
-    localStorage.setItem("token", token);
-    set({ user, token });
+  login: (user, accessToken) => {
+    localStorage.setItem("accessToken", accessToken);
+    set({ user, accessToken });
   },
 
-  logout: () => {
-    localStorage.removeItem("token");
-    set({ user: null, token: null });
+  logout: async () => {
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      localStorage.removeItem("accessToken");
+      set({ user: null, accessToken: null });
+    }
   },
 }));

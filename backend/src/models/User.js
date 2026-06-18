@@ -17,10 +17,15 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      default: "owner", // owner | staff
+      default: "admin", // The creator of the workspace defaults to admin
     },
-    businessId: {
+    tenantId: {
       type: String,
+      required: true,
+      index: true,
+    },
+    refreshToken: {
+      type: String, // Store refresh token here for revocation
     },
   },
   { timestamps: true }
