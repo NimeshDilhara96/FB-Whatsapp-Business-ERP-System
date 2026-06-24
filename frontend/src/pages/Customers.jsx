@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   getCustomers,
-  createCustomer,
   deleteCustomer,
   updateCustomer,
 } from "../services/customerService";
@@ -11,6 +10,7 @@ import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Button from "../components/ui/Button";
 import Alert from "../components/ui/Alert";
+import CustomerSidePanel from "../components/customers/CustomerSidePanel";
 
 const cities = [
   "Colombo",
@@ -37,6 +37,7 @@ const Customers = () => {
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -76,19 +77,16 @@ const Customers = () => {
       if (editingId) {
         await updateCustomer(editingId, formData);
         setSuccess("Customer updated successfully!");
-      } else {
-        await createCustomer(formData);
-        setSuccess("Customer added successfully!");
+        setFormData({
+          name: "",
+          whatsappNumber: "",
+          address: "",
+          city: "",
+          notes: "",
+        });
+        setEditingId(null);
+        fetchCustomers();
       }
-      setFormData({
-        name: "",
-        whatsappNumber: "",
-        address: "",
-        city: "",
-        notes: "",
-      });
-      setEditingId(null);
-      fetchCustomers();
     } catch (error) {
       setError(error.response?.data?.message || "Error saving customer");
     }
@@ -132,8 +130,21 @@ const Customers = () => {
     }
   };
 
+  const handleCustomerClick = (customer) => {
+    setSelectedCustomer(customer);
+  };
+
+  const closePopup = () => {
+    setSelectedCustomer(null);
+  };
+
   return (
     <DashboardLayout>
+      <CustomerSidePanel 
+        customer={selectedCustomer} 
+        onClose={closePopup} 
+      />
+
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl font-bold text-tx-main tracking-tight">
           Customer Management
@@ -143,10 +154,11 @@ const Customers = () => {
         </p>
       </div>
 
-      <Card className="mb-8">
-        <h3 className="text-lg font-bold text-tx-main mb-4">
-          {editingId ? "Edit Customer" : "Add New Customer"}
-        </h3>
+      {editingId && (
+        <Card className="mb-8">
+          <h3 className="text-lg font-bold text-tx-main mb-4">
+            Edit Customer
+          </h3>
 
         <Alert type="error" message={error} className="mb-4" />
         <Alert type="success" message={success} className="mb-4" />
@@ -195,16 +207,15 @@ const Customers = () => {
           </div>
           <div className="pt-2 flex gap-3">
             <Button type="submit" variant="primary">
-              {editingId ? "Update Customer" : "Save Customer"}
+              Update Customer
             </Button>
-            {editingId && (
-              <Button type="button" variant="secondary" onClick={handleCancelEdit}>
-                Cancel
-              </Button>
-            )}
+            <Button type="button" variant="secondary" onClick={handleCancelEdit}>
+              Cancel
+            </Button>
           </div>
         </form>
       </Card>
+      )}
 
       <Card>
         <h3 className="text-lg font-bold text-tx-main mb-4">Customer List</h3>
@@ -245,7 +256,10 @@ const Customers = () => {
                     key={customer._id}
                     className="border-b border-base-border-subtle hover:bg-base-bg transition-colors"
                   >
-                    <td className="py-3 px-4 text-tx-main font-medium">
+                    <td 
+                      className="py-3 px-4 text-primary-600 font-medium cursor-pointer hover:text-primary-700 hover:underline"
+                      onClick={() => handleCustomerClick(customer)}
+                    >
                       {customer.name}
                     </td>
                     <td className="py-3 px-4 text-tx-muted">

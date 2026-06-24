@@ -2,10 +2,13 @@ import React, { useState, useEffect } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/ui/Card";
 import { getOrders, updateOrderStatus } from "../services/orderService";
+import CustomerSidePanel from "../components/customers/CustomerSidePanel";
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -33,8 +36,17 @@ const OrderManagement = () => {
     }
   };
 
+  const filteredOrders = statusFilter === "All" 
+    ? orders 
+    : orders.filter((o) => o.orderStatus === statusFilter);
+
   return (
     <DashboardLayout>
+      <CustomerSidePanel 
+        customer={selectedCustomer} 
+        onClose={() => setSelectedCustomer(null)} 
+      />
+
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl font-bold text-tx-main tracking-tight">
           Manage Orders
@@ -45,7 +57,25 @@ const OrderManagement = () => {
       </div>
 
       <Card>
-        <h3 className="text-lg font-bold text-tx-main mb-4">Orders List</h3>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+          <h3 className="text-lg font-bold text-tx-main">Orders List</h3>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-tx-subtle">Filter by Status:</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-1.5 border border-base-border-subtle rounded-md text-sm text-tx-main bg-base-bg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Processing">Processing</option>
+              <option value="Shipped">Shipped</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+              <option value="Returned">Returned</option>
+            </select>
+          </div>
+        </div>
         {loading ? (
           <p className="text-tx-subtle">Loading…</p>
         ) : (
@@ -74,19 +104,24 @@ const OrderManagement = () => {
                 </tr>
               </thead>
               <tbody className="text-sm">
-                {orders.length === 0 ? (
+                {filteredOrders.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="py-6 text-center text-tx-subtle">
                       No orders found.
                     </td>
                   </tr>
                 ) : (
-                  orders.map((ord) => (
+                  filteredOrders.map((ord) => (
                     <tr
                       key={ord._id}
                       className="border-b border-base-border-subtle hover:bg-base-bg transition-colors"
                     >
-                      <td className="py-3 px-4 text-tx-main font-medium">
+                      <td 
+                        className={`py-3 px-4 font-medium ${ord.customerId ? 'text-primary-600 cursor-pointer hover:text-primary-700 hover:underline' : 'text-tx-main'}`}
+                        onClick={() => {
+                          if (ord.customerId) setSelectedCustomer(ord.customerId);
+                        }}
+                      >
                         {ord.customerId?.name || "‑"}
                       </td>
                       <td className="py-3 px-4 text-tx-muted">
@@ -118,6 +153,8 @@ const OrderManagement = () => {
                                 ? "bg-primary-50 text-primary-700 border-primary-200"
                                 : ord.orderStatus === "Delivered"
                                 ? "bg-success-50 text-success-700 border-success-200"
+                                : ord.orderStatus === "Returned"
+                                ? "bg-orange-50 text-orange-700 border-orange-200"
                                 : "bg-danger-50 text-danger-700 border-danger-200"
                             }
                           `}
@@ -127,10 +164,17 @@ const OrderManagement = () => {
                           <option value="Shipped">Shipped</option>
                           <option value="Delivered">Delivered</option>
                           <option value="Cancelled">Cancelled</option>
+                          <option value="Returned">Returned</option>
                         </select>
                       </td>
-                      <td className="py-3 px-4 text-tx-muted text-right">
-                        {new Date(ord.createdAt).toLocaleDateString()}
+                      <td className="py-3 px-4 text-tx-muted text-right whitespace-nowrap">
+                        {new Date(ord.createdAt).toLocaleString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </td>
                     </tr>
                   ))

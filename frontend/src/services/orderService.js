@@ -12,9 +12,12 @@ export const createOrder = async (orderData) => {
 };
 
 //new updateOrderStatus function
-export const updateOrderStatus = async (orderId, orderStatus) => {
-  const response = await API.patch(`/orders/${orderId}/status`, {
-    orderStatus,
-  });
-  return response.data;
+export const updateOrderStatus = async (orderId, newStatus) => {
+    const response = await API.patch(`/orders/${orderId}/status`, { orderStatus: newStatus });
+    return response.data;
+};
+
+export const getCustomerOrders = async (customerId) => {
+    const response = await API.get(`/orders/customer/${customerId}`);
+    return response.data;
 };

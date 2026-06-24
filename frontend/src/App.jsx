@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
 import Orders from "./pages/Orders";
 import OrderManagement from "./pages/OrderManagement";
+import Reports from "./pages/Reports";
 import Products from "./pages/Products";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -56,6 +57,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Products />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Reports />
             </ProtectedRoute>
           }
         />

@@ -83,9 +83,9 @@ export default function Sidebar({ isOpen, onClose }) {
           <p className={navItemClass}>
             <span className="text-lg">📦</span> Inventory
           </p>
-          <p className={navItemClass}>
+          <Link to="/reports" onClick={onClose} className={navItemClass}>
             <span className="text-lg">💰</span> Reports
-          </p>
+          </Link>
         </div>
 
         {/* Footer / Logout */}
