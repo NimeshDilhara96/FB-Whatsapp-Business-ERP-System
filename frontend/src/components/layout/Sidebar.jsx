@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -37,9 +38,9 @@ export default function Sidebar({ isOpen, onClose }) {
 
                 {/* Navigation */}
                 <div className="flex-1 overflow-y-auto py-5 px-4 space-y-1.5">
-                    <p className={navItemClass}><span className="text-lg">📊</span> Dashboard</p>
-                    <p className={navItemClass}><span className="text-lg">📦</span> Products</p>
-                    <p className={navItemClass}><span className="text-lg">👥</span> Customers</p>
+                    <Link to="/dashboard" onClick={onClose} className={navItemClass}><span className="text-lg">📊</span> Dashboard</Link>
+                    <Link to="/products" onClick={onClose} className={navItemClass}><span className="text-lg">📦</span> Products</Link>
+                    <Link to="/customers" onClick={onClose} className={navItemClass}><span className="text-lg">👥</span> Customers</Link>
                     <p className={navItemClass}><span className="text-lg">🧾</span> Orders</p>
                     <p className={navItemClass}><span className="text-lg">📦</span> Inventory</p>
                     <p className={navItemClass}><span className="text-lg">💰</span> Reports</p>

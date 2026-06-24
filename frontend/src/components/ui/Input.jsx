@@ -6,7 +6,8 @@ export default function Input({
     value, 
     onChange, 
     className = "",
-    rightElement
+    rightElement,
+    name
 }) {
     return (
         <div className={className}>
@@ -25,6 +26,7 @@ export default function Input({
                     </div>
                 )}
                 <input
+                    name={name}
                     type={type}
                     value={value}
                     placeholder={placeholder}
