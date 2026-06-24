@@ -1,56 +1,42 @@
-import { useAuthStore } from "../store/authStore";
+import { useState } from "react";
+import Sidebar from "../components/layout/Sidebar";
 
 export default function DashboardLayout({ children }) {
-    const logout = useAuthStore((state) => state.logout);
-
-    const navItemClass = "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer";
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
-        <div className="flex h-screen bg-gray-50 font-sans text-gray-800">
+        <div className="flex h-screen bg-base-bg font-sans text-tx-main overflow-hidden">
 
             {/* Sidebar */}
-            <div className="w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10">
-                
-                {/* Logo Area */}
-                <div className="h-16 flex items-center px-6 border-b border-gray-100">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-emerald-500 rounded-lg shadow-sm shadow-emerald-200 flex items-center justify-center">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <Sidebar isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col min-w-0">
+                {/* Mobile Header (Hidden on Desktop) */}
+                <div className="md:hidden h-16 bg-base-surface border-b border-base-border-subtle flex items-center justify-between px-4 shrink-0">
+                    <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 bg-primary-500 rounded-md flex items-center justify-center">
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                         </div>
-                        <h2 className="text-xl font-bold text-gray-800 tracking-tight">SocialERP</h2>
+                        <h2 className="text-lg font-bold text-tx-main">SocialERP</h2>
                     </div>
-                </div>
-
-                {/* Navigation */}
-                <div className="flex-1 overflow-y-auto py-5 px-4 space-y-1.5">
-                    <p className={navItemClass}><span className="text-lg">📊</span> Dashboard</p>
-                    <p className={navItemClass}><span className="text-lg">📦</span> Products</p>
-                    <p className={navItemClass}><span className="text-lg">👥</span> Customers</p>
-                    <p className={navItemClass}><span className="text-lg">🧾</span> Orders</p>
-                    <p className={navItemClass}><span className="text-lg">📦</span> Inventory</p>
-                    <p className={navItemClass}><span className="text-lg">💰</span> Reports</p>
-                </div>
-
-                {/* Footer / Logout */}
-                <div className="p-4 border-t border-gray-100">
                     <button 
-                        onClick={logout} 
-                        className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all duration-200"
+                        onClick={() => setIsMobileMenuOpen(true)}
+                        className="p-2 -mr-2 text-tx-subtle hover:text-tx-main"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
-                        Logout
                     </button>
                 </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="flex-1 overflow-auto bg-gray-50">
-                <div className="p-8 max-w-7xl mx-auto h-full">
-                    {children}
+                {/* Page Content */}
+                <div className="flex-1 overflow-auto">
+                    <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-full">
+                        {children}
+                    </div>
                 </div>
             </div>
             
