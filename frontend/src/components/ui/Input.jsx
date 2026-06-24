@@ -7,7 +7,8 @@ export default function Input({
     onChange, 
     className = "",
     rightElement,
-    name
+    name,
+    disabled = false
 }) {
     return (
         <div className={className}>
@@ -31,7 +32,8 @@ export default function Input({
                     value={value}
                     placeholder={placeholder}
                     onChange={onChange}
-                    className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-2.5 text-sm text-tx-main bg-base-bg border border-base-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all placeholder-tx-subtle`}
+                    disabled={disabled}
+                    className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-2.5 text-sm text-tx-main bg-base-bg border border-base-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all placeholder-tx-subtle ${disabled ? 'opacity-60 cursor-not-allowed bg-base-surface' : ''}`}
                 />
             </div>
         </div>

@@ -4,14 +4,12 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import connectDB from "./src/config/db.js";
-import productRoutes from "./src/routes/productRoutes.js";    
+import productRoutes from "./src/routes/productRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import { tenantMiddleware } from "./src/middleware/tenantMiddleware.js";
 import { authMiddleware } from "./src/middleware/authMiddleware.js"; // <--- Import security middleware
-
-// Note: Uncomment these imports once you create the route files
-// import orderRoutes from "./src/routes/orderRoutes.js";
 import customerRoutes from "./src/routes/customerRoutes.js";
+import orderRoutes from "./src/routes/orderRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -19,10 +17,12 @@ connectDB();
 const app = express();
 
 app.use(helmet());
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(cookieParser());
 
@@ -40,7 +40,7 @@ app.use(authMiddleware);
 app.use("/api/products", productRoutes);
 
 // Note: Uncomment these routes once you create the route files
-// app.use("/api/orders", orderRoutes);
+app.use("/api/orders", orderRoutes);
 app.use("/api/customers", customerRoutes);
 
 app.listen(process.env.PORT, () => {

@@ -55,7 +55,7 @@ export const updateCustomer = async (req, res) => {
     const updatedCustomer = await Customer.findOneAndUpdate(
       { _id: id, tenantId: tenantId },
       { $set: req.body }, // add new details
-      { new: true }, // return updated details
+      { returnDocument: 'after' }, // return updated details
     );
 
     if (!updatedCustomer) {
