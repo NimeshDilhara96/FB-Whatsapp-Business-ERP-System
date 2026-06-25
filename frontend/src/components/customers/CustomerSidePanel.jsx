@@ -111,6 +111,11 @@ const CustomerSidePanel = ({ customer, onClose }) => {
                             minute: '2-digit'
                           })}
                         </p>
+                        <p className="text-xs text-primary-600 font-medium mt-0.5 flex items-center gap-1.5">
+                          <span>{order.source || 'WhatsApp'}</span>
+                          <span className="text-tx-subtle">•</span>
+                          <span>{order.paymentMethod || 'Cash on Delivery'}</span>
+                        </p>
                         <p className="text-sm font-bold text-tx-main mt-1">
                           Rs. {order.totalAmount?.toFixed(2)}
                         </p>
@@ -125,6 +130,8 @@ const CustomerSidePanel = ({ customer, onClose }) => {
                             ? "bg-primary-50 text-primary-700 border-primary-200"
                             : order.orderStatus === "Delivered"
                             ? "bg-success-50 text-success-700 border-success-200"
+                            : order.orderStatus === "Completed"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                             : order.orderStatus === "Returned"
                             ? "bg-orange-50 text-orange-700 border-orange-200"
                             : "bg-danger-50 text-danger-700 border-danger-200"
@@ -138,9 +145,11 @@ const CustomerSidePanel = ({ customer, onClose }) => {
                       <p className="text-xs font-medium text-tx-subtle mb-2 uppercase tracking-wider">Items</p>
                       <ul className="space-y-1.5">
                         {order.items?.map((item, idx) => (
-                          <li key={idx} className="flex justify-between text-sm">
-                            <span className="text-tx-main">{item.productName}</span>
-                            <span className="text-tx-muted font-medium">x{item.quantity}</span>
+                          <li key={idx} className="flex justify-between text-sm items-center">
+                            <span className="text-tx-main">
+                              {item.productName} <span className="text-tx-subtle text-xs ml-1">(Rs. {item.price || 0})</span>
+                            </span>
+                            <span className="text-tx-muted font-medium bg-base-bg px-2 py-0.5 rounded-md">x{item.quantity}</span>
                           </li>
                         ))}
                       </ul>

@@ -68,21 +68,18 @@ export default function Sidebar({ isOpen, onClose }) {
           <Link to="/dashboard" onClick={onClose} className={navItemClass}>
             <span className="text-lg">📊</span> Dashboard
           </Link>
-          <Link to="/products" onClick={onClose} className={navItemClass}>
-            <span className="text-lg">📦</span> Products
-          </Link>
-          <Link to="/customers" onClick={onClose} className={navItemClass}>
-            <span className="text-lg">👥</span> Customers
-          </Link>
           <Link to="/orders" onClick={onClose} className={navItemClass}>
             <span className="text-lg">🧾</span> Create Order
           </Link>
           <Link to="/order-management" onClick={onClose} className={navItemClass}>
             <span className="text-lg">📋</span> Manage Orders
           </Link>
-          <p className={navItemClass}>
-            <span className="text-lg">📦</span> Inventory
-          </p>
+          <Link to="/customers" onClick={onClose} className={navItemClass}>
+            <span className="text-lg">👥</span> Customers
+          </Link>
+          <Link to="/products" onClick={onClose} className={navItemClass}>
+            <span className="text-lg">📦</span> Products
+          </Link>
           <Link to="/reports" onClick={onClose} className={navItemClass}>
             <span className="text-lg">💰</span> Reports
           </Link>

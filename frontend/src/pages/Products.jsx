@@ -17,6 +17,7 @@ const Products = () => {
     name: "",
     description: "",
     price: "",
+    costPrice: "",
     stockQuantity: "",
   });
   const [editingId, setEditingId] = useState(null);
@@ -79,6 +80,7 @@ const Products = () => {
       const dataToSubmit = {
         ...formData,
         price: Number(formData.price),
+        costPrice: Number(formData.costPrice || 0),
         stockQuantity: Number(formData.stockQuantity),
       };
 
@@ -93,6 +95,7 @@ const Products = () => {
         name: "",
         description: "",
         price: "",
+        costPrice: "",
         stockQuantity: "",
       });
       setEditingId(null);
@@ -108,6 +111,7 @@ const Products = () => {
       name: product.name || "",
       description: product.description || "",
       price: product.price || "",
+      costPrice: product.costPrice || "",
       stockQuantity:
         product.stockQuantity !== undefined ? product.stockQuantity : "",
     });
@@ -122,6 +126,7 @@ const Products = () => {
       name: "",
       description: "",
       price: "",
+      costPrice: "",
       stockQuantity: "",
     });
     setError(null);
@@ -159,7 +164,7 @@ const Products = () => {
         <Alert type="success" message={success} className="mb-4" />
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Input
               type="text"
               name="name"
@@ -171,9 +176,19 @@ const Products = () => {
             <Input
               type="number"
               name="price"
-              label="Price"
+              label="Selling Price"
               placeholder="0.00"
               value={formData.price}
+              onChange={handleInputChange}
+              step="0.01"
+              min="0"
+            />
+            <Input
+              type="number"
+              name="costPrice"
+              label="Cost Price (Optional)"
+              placeholder="0.00"
+              value={formData.costPrice}
               onChange={handleInputChange}
               step="0.01"
               min="0"
@@ -187,14 +202,16 @@ const Products = () => {
               onChange={handleInputChange}
               min="0"
             />
-            <Input
-              type="text"
-              name="description"
-              label="Description"
-              placeholder="Product details"
-              value={formData.description}
-              onChange={handleInputChange}
-            />
+            <div className="lg:col-span-2">
+              <Input
+                type="text"
+                name="description"
+                label="Description"
+                placeholder="Product details"
+                value={formData.description}
+                onChange={handleInputChange}
+              />
+            </div>
           </div>
           <div className="pt-2 flex gap-3">
             <Button type="submit" variant="primary">

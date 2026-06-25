@@ -11,9 +11,9 @@ export const createOrder = async (orderData) => {
   return response.data;
 };
 
-//new updateOrderStatus function
-export const updateOrderStatus = async (orderId, newStatus) => {
-    const response = await API.patch(`/orders/${orderId}/status`, { orderStatus: newStatus });
+// update order details (status or payment)
+export const updateOrderDetails = async (orderId, updates) => {
+    const response = await API.patch(`/orders/${orderId}/status`, updates);
     return response.data;
 };
 

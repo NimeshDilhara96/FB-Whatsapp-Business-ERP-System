@@ -5,7 +5,7 @@ import { createOrderSchema } from "../validators/orderValidator.js";
 import { 
   createOrder, 
   getOrders, 
-  updateOrderStatus, 
+  updateOrderDetails, 
   getCustomerOrders 
 } from "../controllers/orderController.js";
 
@@ -15,6 +15,6 @@ const router = express.Router();
 router.post("/", authMiddleware, validate(createOrderSchema), createOrder);
 router.get("/", authMiddleware, getOrders);
 router.get("/customer/:customerId", authMiddleware, getCustomerOrders);
-router.patch("/:id/status", authMiddleware, updateOrderStatus);
+router.patch("/:id/status", authMiddleware, updateOrderDetails);
 
 export default router;

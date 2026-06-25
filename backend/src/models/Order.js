@@ -45,7 +45,7 @@ const orderSchema = new mongoose.Schema(
     // 4. Order Tracking
     orderStatus: {
       type: String,
-      enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"],
+      enum: ["Pending", "Processing", "Shipped", "Delivered", "Completed", "Cancelled", "Returned"],
       default: "Pending",
     },
 
@@ -58,6 +58,18 @@ const orderSchema = new mongoose.Schema(
     trackingNumber: {
       type: String,
       default: "", // You can add the courier tracking number here later
+    },
+
+    source: {
+      type: String,
+      enum: ["WhatsApp", "Facebook", "Website", "Other"],
+      default: "WhatsApp",
+    },
+
+    paymentMethod: {
+      type: String,
+      enum: ["Cash on Delivery", "Direct Bank Transfer", "Online Payment", "Other"],
+      default: "Cash on Delivery",
     },
   },
   { timestamps: true }, // Automatically adds createdAt and updatedAt

@@ -69,6 +69,8 @@ const Orders = () => {
     whatsappNumber: "",
     address: "",
     city: "",
+    source: "WhatsApp",
+    paymentMethod: "Cash on Delivery",
     items: [{ productName: "", quantity: 1, price: 0 }],
     totalAmount: 0,
   };
@@ -173,7 +175,6 @@ const Orders = () => {
       await createOrder(form);
       setSuccess("Order created successfully!");
       setForm(emptyForm);
-      fetchOrders();
       fetchCustomersData(); // new user added to the list
     } catch (err) {
       console.error("Backend Error Data:", err.response?.data);
@@ -237,6 +238,23 @@ const Orders = () => {
             />
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <Select
+              name="source"
+              label="Order Source"
+              value={form.source}
+              onChange={handleChange}
+              options={["WhatsApp", "Facebook", "Website", "Other"]}
+            />
+            <Select
+              name="paymentMethod"
+              label="Payment Method"
+              value={form.paymentMethod}
+              onChange={handleChange}
+              options={["Cash on Delivery", "Direct Bank Transfer", "Online Payment", "Other"]}
+            />
+          </div>
+
           <div className="mt-4">
             <h4 className="font-medium text-tx-main mb-2">Order Items</h4>
             {form.items.map((item, idx) => (
@@ -268,6 +286,7 @@ const Orders = () => {
                   name="quantity"
                   label="Qty"
                   min={1}
+                  max={products.find(p => p.name === item.productName)?.stockQuantity || 9999}
                   value={item.quantity}
                   onChange={(e) =>
                     handleItemChange(idx, "quantity", Number(e.target.value))
