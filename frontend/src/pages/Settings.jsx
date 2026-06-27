@@ -72,6 +72,33 @@ export default function Settings() {
             </Button>
           </div>
         </Card>
+
+        <Card className="p-6 mt-6">
+          <h2 className="text-lg font-bold text-tx-main mb-4">Subscription Plan</h2>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-base-surface border border-base-border rounded-lg p-4">
+              <p className="text-sm text-tx-subtle mb-1">Current Plan</p>
+              <p className="text-lg font-bold text-tx-main">{user?.subscription?.plan || 'Free'}</p>
+            </div>
+            
+            <div className="bg-base-surface border border-base-border rounded-lg p-4">
+              <p className="text-sm text-tx-subtle mb-1">Status</p>
+              <p className={`text-lg font-bold ${user?.subscription?.status === 'Active' ? 'text-success-500' : 'text-danger-500'}`}>
+                {user?.subscription?.status || 'Unknown'}
+              </p>
+            </div>
+            
+            <div className="bg-base-surface border border-base-border rounded-lg p-4">
+              <p className="text-sm text-tx-subtle mb-1">Expires On</p>
+              <p className="text-lg font-bold text-tx-main">
+                {user?.subscription?.expiresAt 
+                  ? new Date(user.subscription.expiresAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) 
+                  : 'N/A'}
+              </p>
+            </div>
+          </div>
+        </Card>
       </div>
     </DashboardLayout>
   );
