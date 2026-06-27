@@ -24,18 +24,27 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "10kb" })); // Limit body payload to prevent DoS
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
 
 // 1. Data Sanitization against NoSQL query injection
 import mongoSanitize from "express-mongo-sanitize";
-app.use(mongoSanitize());
+
+app.use((req, res, next) => {
+  if (req.body) mongoSanitize.sanitize(req.body, { replaceWith: "_" });
+  if (req.params) mongoSanitize.sanitize(req.params, { replaceWith: "_" });
+  if (req.query) mongoSanitize.sanitize(req.query, { replaceWith: "_" });
+  next();
+});
 
 // 2. Global Rate Limiting
 import rateLimit from "express-rate-limit";
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
-  message: { message: "Too many requests from this IP, please try again later." }
+  message: {
+    message: "Too many requests from this IP, please try again later.",
+  },
 });
 app.use("/api", globalLimiter);
 

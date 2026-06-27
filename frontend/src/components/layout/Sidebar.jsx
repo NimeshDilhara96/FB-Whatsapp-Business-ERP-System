@@ -39,7 +39,7 @@ export default function Sidebar({ isOpen, onClose }) {
               </svg>
             </div>
             <h2 className="text-xl font-bold text-tx-main tracking-tight">
-              SocialERP
+              OrderFlow
             </h2>
           </div>
           {/* Close button (Mobile only) */}
@@ -71,7 +71,11 @@ export default function Sidebar({ isOpen, onClose }) {
           <Link to="/orders" onClick={onClose} className={navItemClass}>
             <span className="text-lg">🧾</span> Create Order
           </Link>
-          <Link to="/order-management" onClick={onClose} className={navItemClass}>
+          <Link
+            to="/order-management"
+            onClick={onClose}
+            className={navItemClass}
+          >
             <span className="text-lg">📋</span> Manage Orders
           </Link>
           <Link to="/customers" onClick={onClose} className={navItemClass}>

@@ -42,7 +42,27 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-base-bg to-primary-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-base-bg to-primary-50 flex flex-col items-center justify-center p-4 md:relative">
+            {/* Top-Left Branding (centered on mobile, absolute top-left on desktop) */}
+            <div className="flex items-center gap-2.5 mb-8 md:mb-0 md:absolute md:top-6 md:left-6">
+                <div className="w-8 h-8 bg-primary-500 rounded-lg shadow-sm shadow-primary-200 flex items-center justify-center">
+                    <svg
+                        className="w-5 h-5 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
+                    </svg>
+                </div>
+                <span className="text-xl font-bold text-tx-main tracking-tight">order Folow Erp</span>
+            </div>
+
             <div className="w-full max-w-md">
 
                 {/* Header Branding */}
