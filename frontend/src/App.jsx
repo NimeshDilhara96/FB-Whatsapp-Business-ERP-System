@@ -7,6 +7,7 @@ import Orders from "./pages/Orders";
 import OrderManagement from "./pages/OrderManagement";
 import Reports from "./pages/Reports";
 import Products from "./pages/Products";
+import Settings from "./pages/Settings";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 export default function App() {
@@ -65,6 +66,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Reports />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

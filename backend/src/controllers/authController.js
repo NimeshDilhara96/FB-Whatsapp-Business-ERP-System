@@ -82,6 +82,7 @@ export const registerTenant = async (req, res) => {
         email: user.email,
         tenantId: user.tenantId,
         companyName: newTenant.companyName,
+        currency: newTenant.currency || "Rs.",
         role: user.role
       }
     });
@@ -129,6 +130,7 @@ export const login = async (req, res) => {
         email: user.email,
         tenantId: user.tenantId,
         companyName: tenant ? tenant.companyName : "Unknown Workspace",
+        currency: tenant ? tenant.currency : "Rs.",
         role: user.role
       }
     });

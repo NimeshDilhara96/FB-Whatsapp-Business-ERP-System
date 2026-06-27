@@ -8,6 +8,7 @@ import Alert from "../components/ui/Alert";
 import { createOrder } from "../services/orderService";
 import { getProducts } from "../services/productService";
 import { getCustomers } from "../services/customerService";
+import { useAuthStore } from "../store/authStore";
 
 const cities = [
   "Colombo",
@@ -23,6 +24,7 @@ const cities = [
 ];
 
 const Orders = () => {
+  const user = useAuthStore((state) => state.user);
   // ── Data fetching States ──
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]); // customers state
@@ -275,7 +277,7 @@ const Orders = () => {
                     <option value="">-- Select Product --</option>
                     {products.map((p) => (
                       <option key={p._id} value={p.name}>
-                        {p.name} (Rs. {p.price})
+                        {p.name} ({user?.currency || 'Rs.'} {p.price})
                       </option>
                     ))}
                   </select>
@@ -331,7 +333,7 @@ const Orders = () => {
           <div className="pt-4 pb-2 text-lg">
             <strong>Total Amount: </strong>
             <span className="text-primary-600 font-bold">
-              Rs. {form.totalAmount.toFixed(2)}
+              {user?.currency || 'Rs.'} {form.totalAmount.toFixed(2)}
             </span>
           </div>
 

@@ -7,8 +7,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
+import { useAuthStore } from "../store/authStore";
 
 const Reports = () => {
+  const user = useAuthStore((state) => state.user);
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -265,28 +267,28 @@ const Reports = () => {
         <Card className="flex flex-col bg-primary-900/10 border-primary-500/20">
           <span className="text-primary-400 text-sm font-medium mb-2">Sales Today</span>
           <span className="text-3xl font-bold text-tx-main flex items-center gap-2">
-            Rs. {loading ? "..." : salesToday.toLocaleString()}
+            {user?.currency || 'Rs.'} {loading ? "..." : salesToday.toLocaleString()}
           </span>
           <span className="text-xs text-success-500 font-medium mt-1">
-             Profit: Rs. {loading ? "..." : profitToday.toLocaleString()}
+             Profit: {user?.currency || 'Rs.'} {loading ? "..." : profitToday.toLocaleString()}
           </span>
         </Card>
         <Card className="flex flex-col bg-primary-900/10 border-primary-500/20">
           <span className="text-primary-400 text-sm font-medium mb-2">Sales This Week</span>
           <span className="text-3xl font-bold text-tx-main flex items-center gap-2">
-            Rs. {loading ? "..." : salesThisWeek.toLocaleString()}
+            {user?.currency || 'Rs.'} {loading ? "..." : salesThisWeek.toLocaleString()}
           </span>
           <span className="text-xs text-success-500 font-medium mt-1">
-             Profit: Rs. {loading ? "..." : profitThisWeek.toLocaleString()}
+             Profit: {user?.currency || 'Rs.'} {loading ? "..." : profitThisWeek.toLocaleString()}
           </span>
         </Card>
         <Card className="flex flex-col bg-primary-900/10 border-primary-500/20">
           <span className="text-primary-400 text-sm font-medium mb-2">Sales This Month</span>
           <span className="text-3xl font-bold text-tx-main flex items-center gap-2">
-            Rs. {loading ? "..." : salesThisMonth.toLocaleString()}
+            {user?.currency || 'Rs.'} {loading ? "..." : salesThisMonth.toLocaleString()}
           </span>
           <span className="text-xs text-success-500 font-medium mt-1">
-             Profit: Rs. {loading ? "..." : profitThisMonth.toLocaleString()}
+             Profit: {user?.currency || 'Rs.'} {loading ? "..." : profitThisMonth.toLocaleString()}
           </span>
         </Card>
         <Card className="flex flex-col bg-success-900/10 border-success-500/20">
@@ -323,19 +325,19 @@ const Reports = () => {
         </Card>
         <Card className="flex flex-col">
           <span className="text-tx-subtle text-sm font-medium mb-2">Collected Revenue</span>
-          <span className="text-2xl font-bold text-primary-500">Rs. {loading ? "..." : totalRevenue.toLocaleString()}</span>
+          <span className="text-2xl font-bold text-primary-500">{user?.currency || 'Rs.'} {loading ? "..." : totalRevenue.toLocaleString()}</span>
         </Card>
         <Card className="flex flex-col bg-success-900/10 border-success-500/20">
           <span className="text-success-400 text-sm font-medium mb-2">Net Profit</span>
-          <span className="text-2xl font-bold text-success-500">Rs. {loading ? "..." : totalFilteredProfit.toLocaleString()}</span>
+          <span className="text-2xl font-bold text-success-500">{user?.currency || 'Rs.'} {loading ? "..." : totalFilteredProfit.toLocaleString()}</span>
         </Card>
         <Card className="flex flex-col">
           <span className="text-tx-subtle text-sm font-medium mb-2">Average Order</span>
-          <span className="text-2xl font-bold text-info-500">Rs. {loading ? "..." : Math.round(aov).toLocaleString()}</span>
+          <span className="text-2xl font-bold text-info-500">{user?.currency || 'Rs.'} {loading ? "..." : Math.round(aov).toLocaleString()}</span>
         </Card>
         <Card className="flex flex-col">
           <span className="text-tx-subtle text-sm font-medium mb-2">Pending Revenue</span>
-          <span className="text-2xl font-bold text-warning-500">Rs. {loading ? "..." : pendingRevenue.toLocaleString()}</span>
+          <span className="text-2xl font-bold text-warning-500">{user?.currency || 'Rs.'} {loading ? "..." : pendingRevenue.toLocaleString()}</span>
         </Card>
         <Card className="flex flex-col">
           <span className="text-tx-subtle text-sm font-medium mb-2">Return Rate</span>
@@ -354,7 +356,7 @@ const Reports = () => {
                         <BarChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" />
                             <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `Rs.${value}`} />
+                            <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${user?.currency || 'Rs.'}${value}`} />
                             <Tooltip 
                                 cursor={{fill: 'rgba(255, 255, 255, 0.05)'}}
                                 contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F3F4F6' }} 
@@ -395,7 +397,7 @@ const Reports = () => {
                             <Tooltip 
                                 contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F3F4F6' }} 
                                 itemStyle={{ color: '#F3F4F6' }}
-                                formatter={(value) => `Rs. ${value}`}
+                                formatter={(value) => `${user?.currency || 'Rs.'} ${value}`}
                             />
                             <Legend verticalAlign="bottom" height={36} iconType="circle" />
                         </PieChart>
@@ -457,7 +459,7 @@ const Reports = () => {
                                 <span className="text-sm font-medium text-tx-main">{product.name}</span>
                             </div>
                             <div className="text-right">
-                                <div className="text-sm font-bold text-success-500">Rs. {product.profit.toLocaleString()}</div>
+                                <div className="text-sm font-bold text-success-500">{user?.currency || 'Rs.'} {product.profit.toLocaleString()}</div>
                                 <div className="text-xs font-semibold text-tx-subtle">{product.sales} units</div>
                             </div>
                         </div>
@@ -482,7 +484,7 @@ const Reports = () => {
                                 </div>
                                 <span className="font-medium text-tx-main">{customer.name}</span>
                             </div>
-                            <span className="font-semibold text-primary-400">Rs. {customer.total.toLocaleString()}</span>
+                            <span className="font-semibold text-primary-400">{user?.currency || 'Rs.'} {customer.total.toLocaleString()}</span>
                         </div>
                     ))
                 ) : (

@@ -13,6 +13,10 @@ const tenantSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    currency: {
+      type: String,
+      default: "Rs.",
+    },
   },
   { timestamps: true }
 );

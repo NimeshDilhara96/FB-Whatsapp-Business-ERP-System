@@ -10,8 +10,10 @@ import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import Alert from "../components/ui/Alert";
+import { useAuthStore } from "../store/authStore";
 
 const Products = () => {
+  const user = useAuthStore((state) => state.user);
   const [products, setProducts] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -274,7 +276,7 @@ const Products = () => {
                       {product.description || "-"}
                     </td>
                     <td className="py-3 px-4 text-tx-muted">
-                      ${Number(product.price).toFixed(2)}
+                      {user?.currency || 'Rs.'} {Number(product.price).toFixed(2)}
                     </td>
                     <td className="py-3 px-4 text-tx-muted">
                       {product.stockQuantity}

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { getCustomerOrders } from '../../services/orderService';
+import { useAuthStore } from '../../store/authStore';
 
 const CustomerSidePanel = ({ customer, onClose }) => {
+  const user = useAuthStore((state) => state.user);
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
@@ -117,7 +119,7 @@ const CustomerSidePanel = ({ customer, onClose }) => {
                           <span>{order.paymentMethod || 'Cash on Delivery'}</span>
                         </p>
                         <p className="text-sm font-bold text-tx-main mt-1">
-                          Rs. {order.totalAmount?.toFixed(2)}
+                          {user?.currency || 'Rs.'} {order.totalAmount?.toFixed(2)}
                         </p>
                       </div>
                       <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border
@@ -147,7 +149,7 @@ const CustomerSidePanel = ({ customer, onClose }) => {
                         {order.items?.map((item, idx) => (
                           <li key={idx} className="flex justify-between text-sm items-center">
                             <span className="text-tx-main">
-                              {item.productName} <span className="text-tx-subtle text-xs ml-1">(Rs. {item.price || 0})</span>
+                              {item.productName} <span className="text-tx-subtle text-xs ml-1">({user?.currency || 'Rs.'} {item.price || 0})</span>
                             </span>
                             <span className="text-tx-muted font-medium bg-base-bg px-2 py-0.5 rounded-md">x{item.quantity}</span>
                           </li>

@@ -10,6 +10,12 @@ export const useAuthStore = create((set) => ({
     set({ user, accessToken });
   },
 
+  updateUserCurrency: (currency) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, currency } : null,
+    }));
+  },
+
   logout: async () => {
     try {
       await logoutUser();

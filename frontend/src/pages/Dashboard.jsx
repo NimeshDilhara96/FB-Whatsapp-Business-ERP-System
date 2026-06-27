@@ -240,19 +240,19 @@ export default function Dashboard() {
                 <Card className="flex flex-col border-primary-500/20 bg-primary-50/10">
                     <span className="text-tx-subtle text-sm font-medium mb-2">Net Profit</span>
                     <span className="text-3xl font-bold text-primary-600 flex items-center gap-2">
-                        <span className="text-2xl">📈</span> {loading ? "..." : `Rs. ${totalProfit.toLocaleString()}`}
+                        <span className="text-2xl">📈</span> {loading ? "..." : `${user?.currency || 'Rs.'} ${totalProfit.toLocaleString()}`}
                     </span>
                 </Card>
                 <Card className="flex flex-col">
                     <span className="text-tx-subtle text-sm font-medium mb-2">Collected Revenue</span>
                     <span className="text-3xl font-bold text-success-600 flex items-center gap-2">
-                        <span className="text-2xl">💰</span> {loading ? "..." : `Rs. ${totalRevenue.toLocaleString()}`}
+                        <span className="text-2xl">💰</span> {loading ? "..." : `${user?.currency || 'Rs.'} ${totalRevenue.toLocaleString()}`}
                     </span>
                 </Card>
                 <Card className="flex flex-col">
                     <span className="text-tx-subtle text-sm font-medium mb-2">Inventory Value</span>
                     <span className="text-3xl font-bold text-tx-main flex items-center gap-2">
-                        <span className="text-2xl">📦</span> {loading ? "..." : `Rs. ${inventoryValue.toLocaleString()}`}
+                        <span className="text-2xl">📦</span> {loading ? "..." : `${user?.currency || 'Rs.'} ${inventoryValue.toLocaleString()}`}
                     </span>
                 </Card>
                 <Card className="flex flex-col">
@@ -274,7 +274,7 @@ export default function Dashboard() {
                 </Card>
                 <Card className="flex flex-col">
                     <span className="text-tx-subtle text-sm font-medium mb-2">Pending Revenue (COD)</span>
-                    <span className="text-2xl font-bold text-warning-500">{loading ? "..." : `Rs. ${pendingRevenue.toLocaleString()}`}</span>
+                    <span className="text-2xl font-bold text-warning-500">{loading ? "..." : `${user?.currency || 'Rs.'} ${pendingRevenue.toLocaleString()}`}</span>
                 </Card>
                 <Card className="flex flex-col">
                     <span className="text-tx-subtle text-sm font-medium mb-2">Returns</span>
@@ -325,7 +325,7 @@ export default function Dashboard() {
                                 <BarChart data={chartData}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" />
                                     <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} />
-                                    <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `Rs.${value}`} />
+                                    <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${user?.currency || 'Rs.'}${value}`} />
                                     <Tooltip 
                                         cursor={{fill: 'rgba(255, 255, 255, 0.05)'}}
                                         contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F3F4F6' }} 
@@ -379,7 +379,7 @@ export default function Dashboard() {
                                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: src.color }}></div>
                                         <span className="font-medium text-tx-main">{src.name}</span>
                                     </div>
-                                    <span className="font-semibold text-primary-400">Rs. {src.value.toLocaleString()}</span>
+                                    <span className="font-semibold text-primary-400">{user?.currency || 'Rs.'} {src.value.toLocaleString()}</span>
                                 </div>
                             ))
                         ) : (
@@ -403,7 +403,7 @@ export default function Dashboard() {
                                         </div>
                                         <span className="font-medium text-tx-main">{customer.name}</span>
                                     </div>
-                                    <span className="font-semibold text-primary-400">Rs. {customer.total.toLocaleString()}</span>
+                                    <span className="font-semibold text-primary-400">{user?.currency || 'Rs.'} {customer.total.toLocaleString()}</span>
                                 </div>
                             ))
                         ) : (
@@ -439,7 +439,7 @@ export default function Dashboard() {
                                         </span>
                                     </div>
                                     <div className="flex flex-col items-end">
-                                        <span className="font-semibold text-tx-main">Rs. {order.totalAmount?.toLocaleString()}</span>
+                                        <span className="font-semibold text-tx-main">{user?.currency || 'Rs.'} {order.totalAmount?.toLocaleString()}</span>
                                         <span className="text-xs text-warning-400 font-medium">Pending</span>
                                     </div>
                                 </div>

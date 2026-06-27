@@ -3,8 +3,10 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/ui/Card";
 import { getOrders, updateOrderDetails } from "../services/orderService";
 import CustomerSidePanel from "../components/customers/CustomerSidePanel";
+import { useAuthStore } from "../store/authStore";
 
 const OrderManagement = () => {
+  const user = useAuthStore((state) => state.user);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("new_orders");
@@ -263,7 +265,7 @@ const OrderManagement = () => {
                       {/* 3. Payment Info Column */}
                       <td className="py-4 px-4 align-top">
                         <div className="font-bold text-tx-main text-base mb-1">
-                          Rs. {ord.totalAmount?.toFixed(2)}
+                          {user?.currency || 'Rs.'} {ord.totalAmount?.toFixed(2)}
                         </div>
                         <div className="text-xs text-tx-muted font-medium mb-2 uppercase tracking-wide">
                           Method: {ord.paymentMethod || "COD"}

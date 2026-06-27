@@ -10,6 +10,7 @@ import { tenantMiddleware } from "./src/middleware/tenantMiddleware.js";
 import { authMiddleware } from "./src/middleware/authMiddleware.js"; // <--- Import security middleware
 import customerRoutes from "./src/routes/customerRoutes.js";
 import orderRoutes from "./src/routes/orderRoutes.js";
+import tenantRoutes from "./src/routes/tenantRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -64,6 +65,7 @@ app.use("/api/products", productRoutes);
 // Note: Uncomment these routes once you create the route files
 app.use("/api/orders", orderRoutes);
 app.use("/api/customers", customerRoutes);
+app.use("/api/tenant", tenantRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);
