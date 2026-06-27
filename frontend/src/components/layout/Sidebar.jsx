@@ -113,6 +113,11 @@ export default function Sidebar({ isOpen, onClose }) {
             </svg>
             Logout
           </button>
+          
+          <div className="mt-4 text-center">
+            <p className="text-xs text-tx-muted font-medium">ERP System v1.0.0</p>
+            <p className="text-xs text-tx-subtle mt-0.5">By MommentX</p>
+          </div>
         </div>
       </div>
     </>
