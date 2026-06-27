@@ -1,7 +1,7 @@
 import express from "express";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { validate } from "../middleware/validate.js";
-import { createOrderSchema } from "../validators/orderValidator.js";
+import { createOrderSchema, updateOrderStatusSchema } from "../validators/orderValidator.js";
 import { 
   createOrder, 
   getOrders, 
@@ -15,6 +15,6 @@ const router = express.Router();
 router.post("/", authMiddleware, validate(createOrderSchema), createOrder);
 router.get("/", authMiddleware, getOrders);
 router.get("/customer/:customerId", authMiddleware, getCustomerOrders);
-router.patch("/:id/status", authMiddleware, updateOrderDetails);
+router.patch("/:id/status", authMiddleware, validate(updateOrderStatusSchema), updateOrderDetails);
 
 export default router;

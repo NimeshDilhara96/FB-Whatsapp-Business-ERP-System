@@ -16,3 +16,10 @@ export const createOrderSchema = z.object({
   items: z.array(orderItemSchema).min(1, "Order must have at least one item"),
   totalAmount: z.number().min(0, "Total amount cannot be negative"),
 });
+
+export const updateOrderStatusSchema = z.object({
+  orderStatus: z.enum(["Pending", "Processing", "Shipped", "Delivered", "Completed", "Cancelled", "Returned"]).optional(),
+  paymentStatus: z.enum(["Pending", "Paid"]).optional(),
+}).refine(data => data.orderStatus !== undefined || data.paymentStatus !== undefined, {
+  message: "At least one of orderStatus or paymentStatus must be provided to update"
+});

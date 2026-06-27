@@ -8,6 +8,7 @@ import productRoutes from "./src/routes/productRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import { tenantMiddleware } from "./src/middleware/tenantMiddleware.js";
 import { authMiddleware } from "./src/middleware/authMiddleware.js"; // <--- Import security middleware
+import { subscriptionMiddleware } from "./src/middleware/subscriptionMiddleware.js";
 import customerRoutes from "./src/routes/customerRoutes.js";
 import orderRoutes from "./src/routes/orderRoutes.js";
 import tenantRoutes from "./src/routes/tenantRoutes.js";
@@ -59,12 +60,12 @@ app.use("/api/auth", authRoutes);
 // 2. SECURITY WALL: Verifies JWT and injects `req.tenantId` for all downstream routes
 app.use(authMiddleware);
 
-// 4. Protected Routes
-app.use("/api/products", productRoutes);
+// 3. SUBSCRIPTION WALL: Verifies Tenant subscription is active and not expired
+app.use("/api/products", subscriptionMiddleware, productRoutes);
 
 // Note: Uncomment these routes once you create the route files
-app.use("/api/orders", orderRoutes);
-app.use("/api/customers", customerRoutes);
+app.use("/api/orders", subscriptionMiddleware, orderRoutes);
+app.use("/api/customers", subscriptionMiddleware, customerRoutes);
 app.use("/api/tenant", tenantRoutes);
 
 app.listen(process.env.PORT, () => {
