@@ -9,8 +9,8 @@ const api = axios.create({
 
 // Axios Interceptor to automatically attach headers to EVERY request
 api.interceptors.request.use((config) => {
-  // 1. Get the auth token from local storage
-  const token = localStorage.getItem("accessToken");
+  // 1. Get the auth token from Zustand store
+  const token = useAuthStore.getState().accessToken;
 
   // 2. Attach Authorization header if logged in
   if (token) {
