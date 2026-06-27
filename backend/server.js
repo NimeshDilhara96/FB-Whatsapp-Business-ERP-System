@@ -21,9 +21,11 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin:
-      process.env.FRONTEND_URL ||
-      "https://fb-whatsapp-business-erp-system.vercel.app/",
+    origin: [
+      process.env.FRONTEND_URL,
+      "https://fb-whatsapp-business-erp-system.vercel.app",
+      "http://localhost:5173"
+    ].filter(Boolean),
     credentials: true,
   }),
 );
