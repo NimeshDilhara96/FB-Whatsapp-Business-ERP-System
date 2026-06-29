@@ -45,6 +45,10 @@ app.use((req, res, next) => {
 
 // 2. Global Rate Limiting
 import rateLimit from "express-rate-limit";
+
+// Trust the reverse proxy (Render Load Balancer) so the rate limiter uses the actual client IP
+app.set("trust proxy", 1);
+
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
