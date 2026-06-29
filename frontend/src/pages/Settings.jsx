@@ -8,7 +8,7 @@ import Alert from "../components/ui/Alert";
 
 const changelogData = [
   {
-    version: "v1.1.0",
+    version: "v1.0.0",
     date: "June 27, 2026",
     changes: [
       "Multi-tenancy: Secure, 100% isolated data environments for independent businesses.",
@@ -16,6 +16,11 @@ const changelogData = [
       "Subscription Management: Automated billing tiers (Free/Basic/Pro) with a secure Read-Only Mode for expired plans.",
       "Financial Dashboard: Real-time analytics for revenue and receivables.",
     ],
+  },
+  {
+    version: "v1.0.1",
+    date: "June 29, 2026",
+    changes: [" rate limiting, and request sanitization", "speed optimization"],
   },
 ];
 
