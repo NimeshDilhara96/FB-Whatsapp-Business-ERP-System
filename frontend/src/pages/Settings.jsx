@@ -22,6 +22,14 @@ const changelogData = [
     date: "June 29, 2026",
     changes: [" rate limiting, and request sanitization", "speed optimization"],
   },
+  {
+    version: "v1.0.2",
+    date: "June 30, 2026",
+    changes: [
+      " Server migration from us-east to south-Asia",
+      "Speed optimization",
+    ],
+  },
 ];
 
 export default function Settings() {
