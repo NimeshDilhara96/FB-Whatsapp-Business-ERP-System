@@ -8,13 +8,11 @@ import Alert from "../components/ui/Alert";
 
 const changelogData = [
   {
-    version: "v1.0.0",
-    date: "June 27, 2026",
+    version: "v1.0.2",
+    date: "June 30, 2026",
     changes: [
-      "Multi-tenancy: Secure, 100% isolated data environments for independent businesses.",
-      "Smart Order Engine: Strict state-machine logic (Pending ➔ Processing ➔ Shipped ➔ Delivered) with real-time inventory sync.",
-      "Subscription Management: Automated billing tiers (Free/Basic/Pro) with a secure Read-Only Mode for expired plans.",
-      "Financial Dashboard: Real-time analytics for revenue and receivables.",
+      " Server migration from us-east to south-Asia",
+      "Speed optimization",
     ],
   },
   {
@@ -23,11 +21,13 @@ const changelogData = [
     changes: [" rate limiting, and request sanitization", "speed optimization"],
   },
   {
-    version: "v1.0.2",
-    date: "June 30, 2026",
+    version: "v1.0.0",
+    date: "June 27, 2026",
     changes: [
-      " Server migration from us-east to south-Asia",
-      "Speed optimization",
+      "Multi-tenancy: Secure, 100% isolated data environments for independent businesses.",
+      "Smart Order Engine: Strict state-machine logic (Pending ➔ Processing ➔ Shipped ➔ Delivered) with real-time inventory sync.",
+      "Subscription Management: Automated billing tiers (Free/Basic/Pro) with a secure Read-Only Mode for expired plans.",
+      "Financial Dashboard: Real-time analytics for revenue and receivables.",
     ],
   },
 ];
