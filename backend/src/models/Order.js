@@ -25,6 +25,7 @@ const orderSchema = new mongoose.Schema(
     tenantId: {
       type: String, // 👈 මෙතන ObjectId වෙනුවට String කළා. ref: "User" අයින් කළා.
       required: true,
+      index: true,
     },
 
     // 2. The Magic Link: Connects this order to a specific Customer

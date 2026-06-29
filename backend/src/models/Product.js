@@ -6,6 +6,7 @@ const productSchema = new mongoose.Schema(
     tenantId: {
       type: String, // 👈 මෙන්න මේක තමයි අපි වෙනස් කළේ (ObjectId වෙනුවට String දුන්නා)
       required: true,
+      index: true,
       // 'ref: "User"' කියන එක මෙතනින් අයින් කළා
     },
     name: {
