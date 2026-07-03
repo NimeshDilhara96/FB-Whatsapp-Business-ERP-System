@@ -33,7 +33,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1.25rem;
+    gap: 1.5rem;
     background-color: #f8f8f8;
     animation: ss-fade 0.25s ease;
   }
@@ -45,35 +45,16 @@
 
   .ss-text-group {
     text-align: center;
-  }
-
-  .ss-title {
-    margin: 0 0 0.25rem;
-    color: #fafafa;
-    font-size: 0.875rem;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    font-family:
-      system-ui,
-      -apple-system,
-      sans-serif;
-  }
-
-  .ss-subtitle {
-    margin: 0;
-    color: #52525b;
-    font-size: 0.78rem;
-    font-family:
-      system-ui,
-      -apple-system,
-      sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .ss-track {
-    width: 10rem;
-    height: 2px;
+    width: 12rem;
+    height: 3px;
     border-radius: 9999px;
-    background-color: #27272a;
+    background-color: #e4e4e7;
     overflow: hidden;
   }
 

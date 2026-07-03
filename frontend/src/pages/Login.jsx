@@ -52,32 +52,36 @@ export default function Login() {
           {/* Spinner */}
           <svg
             className="ss-spinner"
-            width="36"
-            height="36"
+            width="40"
+            height="40"
             viewBox="0 0 36 36"
             fill="none"
           >
-            <circle cx="18" cy="18" r="15" stroke="#27272a" strokeWidth="2.5" />
+            <circle cx="18" cy="18" r="15" stroke="#e4e4e7" strokeWidth="3" />
             <path
               d="M18 3 A15 15 0 0 1 33 18"
               stroke="#6366f1"
-              strokeWidth="2.5"
+              strokeWidth="3"
               strokeLinecap="round"
             />
           </svg>
 
           {/* Text */}
-          <div className="ss-text-group">
-            <p className="ss-title">Starting server…</p>
-            <p className="ss-subtitle">
-              Sorry ! please wait because this is Testing version and i am using
-              Free Tier cloud server (Free servers are cold start — usually
-              10–30 s)
+          <div className="ss-text-group max-w-xs px-4">
+            <h3 className="text-lg font-semibold text-slate-800 mb-1.5 tracking-tight">
+              Waking up server
+            </h3>
+            <p className="text-sm text-slate-500 mb-5 leading-relaxed">
+              This demo runs on a free-tier service which requires a brief cold start. Please allow <span className="font-medium text-slate-700">10–30 seconds</span>.
             </p>
-            <p className="ss-subtitle">
-              when business grow we will moved to paid server with best
-              performance{" "}
-            </p>
+            <div className="bg-indigo-50/70 border border-indigo-100 rounded-lg px-3 py-2 w-full">
+              <p className="text-xs text-indigo-700 font-medium flex items-center justify-center gap-1.5">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Production performance will be instant
+              </p>
+            </div>
           </div>
 
           {/* Progress track */}
