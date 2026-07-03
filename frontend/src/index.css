@@ -1,2 +1,87 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
+
+/* ── Server cold-start overlay ── */
+@keyframes ss-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes ss-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ss-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+@layer components {
+  .ss-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    background-color: #f8f8f8;
+    animation: ss-fade 0.25s ease;
+  }
+
+  .ss-spinner {
+    flex-shrink: 0;
+    animation: ss-spin 0.9s linear infinite;
+  }
+
+  .ss-text-group {
+    text-align: center;
+  }
+
+  .ss-title {
+    margin: 0 0 0.25rem;
+    color: #fafafa;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+
+  .ss-subtitle {
+    margin: 0;
+    color: #52525b;
+    font-size: 0.78rem;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+
+  .ss-track {
+    width: 10rem;
+    height: 2px;
+    border-radius: 9999px;
+    background-color: #27272a;
+    overflow: hidden;
+  }
+
+  .ss-bar {
+    width: 40%;
+    height: 100%;
+    border-radius: 9999px;
+    background-color: #6366f1;
+    animation: ss-bar 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+}
