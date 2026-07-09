@@ -8,6 +8,11 @@ import Alert from "../components/ui/Alert";
 
 const changelogData = [
   {
+    version: "v1.0.3",
+    date: "July 09, 2026",
+    changes: ["Multiple tenant create issue fix(bug Fixed)"],
+  },
+  {
     version: "v1.0.2",
     date: "June 30, 2026",
     changes: [

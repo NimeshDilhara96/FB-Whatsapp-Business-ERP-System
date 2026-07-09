@@ -45,23 +45,40 @@ export const registerTenant = async (req, res) => {
     // 2. Auto-generate a unique tenant ID (e.g. 16 char hex string)
     const generatedTenantId = crypto.randomBytes(8).toString("hex");
 
-    // 3. Create the Tenant (Workspace)
-    const newTenant = await Tenant.create({
-      tenantId: generatedTenantId,
-      companyName,
-    });
-
-    // 4. Hash the password securely
+    // 3. Hash the password securely
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 5. Create the User linked to the new Tenant
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      tenantId: newTenant.tenantId,
-      role: "admin",
-    });
+    // 4. Create the User linked to the new Tenant first
+    // This prevents duplicate tenants if multiple requests are made simultaneously,
+    // as the User unique email constraint will fail the concurrent request before a Tenant is created.
+    let user;
+    try {
+      user = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        tenantId: generatedTenantId,
+        role: "admin",
+      });
+    } catch (error) {
+      if (error.code === 11000) {
+        return res.status(400).json({ message: "Email is already registered" });
+      }
+      throw error;
+    }
+
+    // 5. Create the Tenant (Workspace)
+    let newTenant;
+    try {
+      newTenant = await Tenant.create({
+        tenantId: generatedTenantId,
+        companyName,
+      });
+    } catch (error) {
+      // Rollback: if Tenant creation fails for any reason, delete the user we just created
+      await User.findByIdAndDelete(user._id);
+      throw error;
+    }
 
     // 6. Generate the JWTs
     const { accessToken, refreshToken } = generateTokens(user);
