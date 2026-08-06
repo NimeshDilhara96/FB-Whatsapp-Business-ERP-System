@@ -66,6 +66,33 @@ export default function Settings() {
             </p>
           </div>
 
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-tx-main mb-2">Storefront Link</h3>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={user?.shopSlug ? `${window.location.origin}/shop/${user.shopSlug}` : 'Not available'}
+                className="w-full pl-4 pr-4 py-2.5 text-sm text-tx-main bg-base-bg border border-base-border rounded-lg focus:outline-none"
+              />
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  if (user?.shopSlug) {
+                    navigator.clipboard.writeText(`${window.location.origin}/shop/${user.shopSlug}`);
+                    setSuccess("Storefront link copied to clipboard.");
+                  }
+                }}
+                disabled={!user?.shopSlug}
+              >
+                Copy
+              </Button>
+            </div>
+            <p className="text-xs text-tx-muted mt-2">
+              Share this link with your customers to let them view your available products.
+            </p>
+          </div>
+
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={loading || currency === user?.currency}>
               {loading ? "Saving..." : "Save Changes"}

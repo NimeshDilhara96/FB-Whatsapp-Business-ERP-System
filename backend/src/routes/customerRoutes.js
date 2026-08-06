@@ -1,5 +1,5 @@
 import express from "express";
-import { authMiddleware } from "../middleware/authMiddleware.js";
+
 import { validate } from "../middleware/validate.js";
 // new updateCustomerSchema Import
 import {
@@ -18,19 +18,17 @@ const router = express.Router();
 
 router.post(
   "/",
-  authMiddleware,
   validate(createCustomerSchema),
   createCustomer,
 );
-router.get("/", authMiddleware, getCustomers);
+router.get("/", getCustomers);
 
 // අලුත් Routes දෙක: (/:id කියන්නේ URL එකෙන් ID එක ගන්නවා කියන එකයි)
 router.put(
   "/:id",
-  authMiddleware,
   validate(updateCustomerSchema),
   updateCustomer,
 );
-router.delete("/:id", authMiddleware, deleteCustomer);
+router.delete("/:id", deleteCustomer);
 
 export default router;

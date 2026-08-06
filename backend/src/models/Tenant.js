@@ -13,6 +13,11 @@ const tenantSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    shopSlug: {
+      type: String,
+      unique: true,
+      index: true,
+    },
     currency: {
       type: String,
       default: "Rs.",

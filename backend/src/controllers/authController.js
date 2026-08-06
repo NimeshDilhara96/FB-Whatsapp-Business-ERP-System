@@ -45,10 +45,16 @@ export const registerTenant = async (req, res) => {
     // 2. Auto-generate a unique tenant ID (e.g. 16 char hex string)
     const generatedTenantId = crypto.randomBytes(8).toString("hex");
 
+    // 2.5 Generate a unique shopSlug
+    const baseSlug = companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+    const randomSuffix = crypto.randomBytes(3).toString("hex");
+    const shopSlug = `${baseSlug}-${randomSuffix}`;
+
     // 3. Create the Tenant (Workspace)
     const newTenant = await Tenant.create({
       tenantId: generatedTenantId,
       companyName,
+      shopSlug,
     });
 
     // 4. Hash the password securely
@@ -82,6 +88,7 @@ export const registerTenant = async (req, res) => {
         email: user.email,
         tenantId: user.tenantId,
         companyName: newTenant.companyName,
+        shopSlug: newTenant.shopSlug,
         currency: newTenant.currency || "Rs.",
         subscription: newTenant.subscription,
         role: user.role
@@ -131,6 +138,7 @@ export const login = async (req, res) => {
         email: user.email,
         tenantId: user.tenantId,
         companyName: tenant ? tenant.companyName : "Unknown Workspace",
+        shopSlug: tenant ? tenant.shopSlug : null,
         currency: tenant ? tenant.currency : "Rs.",
         subscription: tenant ? tenant.subscription : null,
         role: user.role

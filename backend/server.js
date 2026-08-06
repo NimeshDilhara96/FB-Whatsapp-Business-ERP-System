@@ -12,6 +12,7 @@ import { subscriptionMiddleware } from "./src/middleware/subscriptionMiddleware.
 import customerRoutes from "./src/routes/customerRoutes.js";
 import orderRoutes from "./src/routes/orderRoutes.js";
 import tenantRoutes from "./src/routes/tenantRoutes.js";
+import shopRoutes from "./src/routes/shopRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -58,8 +59,9 @@ app.get("/", (req, res) => {
   res.send("ERP API Running...");
 });
 
-// 1. Open Routes (Anyone can login/register)
+// 1. Open Routes (Anyone can login/register/view public shop)
 app.use("/api/auth", authRoutes);
+app.use("/api/shop", shopRoutes);
 
 // 2. SECURITY WALL: Verifies JWT and injects `req.tenantId` for all downstream routes
 app.use(authMiddleware);
