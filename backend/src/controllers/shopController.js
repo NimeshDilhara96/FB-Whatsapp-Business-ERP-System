@@ -12,6 +12,11 @@ export const getShopDetails = async (req, res) => {
       return res.status(404).json({ message: "Shop not found" });
     }
 
+    // Check if the tenant's subscription plan is Pro
+    if (tenant.subscription && tenant.subscription.plan !== "Pro") {
+      return res.status(403).json({ message: "Storefront feature is only available on the Pro plan." });
+    }
+
     // Check if the tenant's subscription is active
     if (tenant.subscription && tenant.subscription.status !== "Active") {
       return res.status(403).json({ message: "Shop is currently unavailable" });

@@ -20,6 +20,7 @@ export default function App() {
         {/* explic /register route */}
         <Route path="/register" element={<Register />} />
 
+
         {/* protected routes */}
         <Route
           path="/dashboard"
