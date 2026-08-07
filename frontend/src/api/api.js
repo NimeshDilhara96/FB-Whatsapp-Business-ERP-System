@@ -3,7 +3,9 @@ import { useAuthStore } from "../store/authStore";
 import { refreshToken } from "../services/authService";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: import.meta.env.DEV 
+    ? import.meta.env.VITE_API_URL_LOCAL 
+    : import.meta.env.VITE_API_URL_PROD,
   withCredentials: true, // IMPORTANT: Allows sending/receiving cookies
 });
 

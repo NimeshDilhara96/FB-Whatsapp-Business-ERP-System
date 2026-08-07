@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { logoutUser } from "../services/authService";
 
 export const useAuthStore = create((set) => ({
@@ -8,11 +9,11 @@ export const useAuthStore = create((set) => ({
     set({ user });
   },
 
-  updateUserCurrency: (currency) => {
-    set((state) => ({
-      user: state.user ? { ...state.user, currency } : null,
-    }));
-  },
+      updateUserCurrency: (currency) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, currency } : null,
+        }));
+      },
 
   logout: async () => {
     try {

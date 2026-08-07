@@ -30,8 +30,8 @@ app.use(
   cors({
     origin: [
       process.env.FRONTEND_URL,
-      "https://fb-whatsapp-business-erp-system.vercel.app",
-      "http://localhost:5173"
+      "https://orderflow.mommentx.space",
+      "http://localhost:5173",
     ].filter(Boolean),
     credentials: true,
   }),
@@ -52,9 +52,13 @@ app.use((req, res, next) => {
 
 // 2. Global Rate Limiting
 import rateLimit from "express-rate-limit";
+
+// Trust the reverse proxy (Render Load Balancer) so the rate limiter uses the actual client IP
+app.set("trust proxy", 1);
+
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 500, // Limit each IP to 500 requests per windowMs
   message: {
     message: "Too many requests from this IP, please try again later.",
   },

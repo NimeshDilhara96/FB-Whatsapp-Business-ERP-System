@@ -27,8 +27,8 @@ export const getProducts = async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
 
-    // Only fetch products that belong to this tenant
-    const products = await Product.find({ tenantId: tenantId });
+    // Only fetch products that belong to this tenant, .lean() speeds it up
+    const products = await Product.find({ tenantId: tenantId }).lean();
 
     res.status(200).json(products);
   } catch (error) {

@@ -101,7 +101,8 @@ export const getOrders = async (req, res) => {
 
     const orders = await Order.find({ tenantId: tenantId })
       .populate("customerId", "name whatsappNumber address city notes")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.status(200).json(orders);
   } catch (error) {
@@ -117,7 +118,8 @@ export const getCustomerOrders = async (req, res) => {
 
     const orders = await Order.find({ customerId, tenantId })
       .populate("customerId", "name whatsappNumber address city notes")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.status(200).json(orders);
   } catch (error) {

@@ -13,6 +13,7 @@ export default function Register() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleRegister = async () => {
@@ -28,6 +29,7 @@ export default function Register() {
             return setError("Please enter a valid email address.");
         }
 
+        setIsLoading(true);
         try {
             await registerUser({ companyName, name, email, password });
             setSuccess(true);
@@ -39,6 +41,7 @@ export default function Register() {
             } else {
                 setError(data?.message || "Registration failed");
             }
+            setIsLoading(false);
         }
     };
 
@@ -113,8 +116,8 @@ export default function Register() {
                     </div>
 
                     {/* Register Button */}
-                    <Button onClick={handleRegister} fullWidth className="mt-6">
-                        Create Workspace
+                    <Button onClick={handleRegister} fullWidth className="mt-6" disabled={isLoading || success}>
+                        {isLoading ? "Creating..." : success ? "Redirecting..." : "Create Workspace"}
                     </Button>
 
                     {/* Login Link */}
