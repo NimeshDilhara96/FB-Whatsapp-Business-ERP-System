@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
+import morgan from "morgan";
 import connectDB from "./src/config/db.js";
 import productRoutes from "./src/routes/productRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
@@ -20,6 +21,11 @@ connectDB();
 const app = express();
 
 app.use(helmet());
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+} else {
+  app.use(morgan("combined"));
+}
 app.use(
   cors({
     origin: [
@@ -73,6 +79,15 @@ app.use("/api/products", subscriptionMiddleware, productRoutes);
 app.use("/api/orders", subscriptionMiddleware, orderRoutes);
 app.use("/api/customers", subscriptionMiddleware, customerRoutes);
 app.use("/api/tenant", tenantRoutes);
+
+// Global Error Handler Middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    message: err.message || "Internal Server Error",
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+  });
+});
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);

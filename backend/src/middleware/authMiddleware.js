@@ -5,12 +5,12 @@ export const authMiddleware = async (req, res, next) => {
   let token;
 
   if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
+    req.cookies.accessToken ||
+    (req.headers.authorization && req.headers.authorization.startsWith("Bearer"))
   ) {
     try {
-      // 1. Extract token from header
-      token = req.headers.authorization.split(" ")[1];
+      // 1. Extract token from cookie (preferred) or header
+      token = req.cookies.accessToken || req.headers.authorization.split(" ")[1];
 
       // 2. Cryptographically verify the token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);

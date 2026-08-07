@@ -3,11 +3,9 @@ import { logoutUser } from "../services/authService";
 
 export const useAuthStore = create((set) => ({
   user: null,
-  accessToken: localStorage.getItem("accessToken") || null,
 
-  login: (user, accessToken) => {
-    localStorage.setItem("accessToken", accessToken);
-    set({ user, accessToken });
+  login: (user) => {
+    set({ user });
   },
 
   updateUserCurrency: (currency) => {
@@ -22,8 +20,7 @@ export const useAuthStore = create((set) => ({
     } catch (err) {
       console.error("Logout failed:", err);
     } finally {
-      localStorage.removeItem("accessToken");
-      set({ user: null, accessToken: null });
+      set({ user: null });
     }
   },
 }));

@@ -31,7 +31,7 @@ export default function Login() {
         try {
             setIsLoading(true);
             const res = await loginUser({ email, password });
-            login(res.data.user, res.data.accessToken);
+            login(res.data.user);
             navigate("/dashboard");
         } catch (err) {
             setIsLoading(false);

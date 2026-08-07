@@ -9,14 +9,8 @@ const api = axios.create({
 
 // Axios Interceptor to automatically attach headers to EVERY request
 api.interceptors.request.use((config) => {
-  // 1. Get the auth token from local storage
-  const token = localStorage.getItem("accessToken");
-
-  // 2. Attach Authorization header if logged in
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
+  // We no longer need to attach the token manually! 
+  // withCredentials: true ensures the HttpOnly cookies are sent automatically.
   return config;
 }, (error) => {
   return Promise.reject(error);
@@ -28,20 +22,23 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If 401 error and we haven't already retried this request
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // If 401 error, and it's NOT a retry, and it's NOT the login or refresh endpoints itself
+    if (
+      error.response?.status === 401 && 
+      !originalRequest._retry &&
+      !originalRequest.url.includes("/auth/refresh") &&
+      !originalRequest.url.includes("/auth/login")
+    ) {
       originalRequest._retry = true;
 
       try {
-        // Attempt to get a new access token
-        const res = await refreshToken();
-        const newAccessToken = res.data.accessToken;
+        // Attempt to hit the refresh endpoint (this will set a new HttpOnly accessToken cookie)
+        await refreshToken();
 
-        // Update Zustand store and localStorage
-        useAuthStore.getState().login(useAuthStore.getState().user, newAccessToken);
+        // Update Zustand store (just to re-trigger reactivity if needed, though usually automatic)
+        useAuthStore.getState().login(useAuthStore.getState().user);
 
-        // Update the authorization header and retry original request
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        // Retry original request (cookies will be automatically attached)
         return api(originalRequest);
       } catch (refreshError) {
         // If refresh fails (e.g., refresh token expired), log out the user
