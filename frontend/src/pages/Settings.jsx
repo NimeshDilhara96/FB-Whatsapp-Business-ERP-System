@@ -102,6 +102,46 @@ export default function Settings() {
             </p>
           </div>
 
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-tx-main mb-2">Storefront Link</h3>
+            
+            {user?.subscription?.plan === 'Pro' ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={user?.shopSlug ? `${import.meta.env.VITE_STOREFRONT_URL || 'http://localhost:3000'}/${user.shopSlug}` : 'Not available'}
+                    className="w-full pl-4 pr-4 py-2.5 text-sm text-tx-main bg-base-bg border border-base-border rounded-lg focus:outline-none"
+                  />
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      if (user?.shopSlug) {
+                        navigator.clipboard.writeText(`${import.meta.env.VITE_STOREFRONT_URL || 'http://localhost:3000'}/${user.shopSlug}`);
+                        setSuccess("Storefront link copied to clipboard.");
+                      }
+                    }}
+                    disabled={!user?.shopSlug}
+                  >
+                    Copy
+                  </Button>
+                </div>
+                <p className="text-xs text-tx-muted mt-2">
+                  Share this link with your customers to let them view your available products.
+                </p>
+              </>
+            ) : (
+              <div className="bg-warning-50 border border-warning-200 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-bold text-warning-800">Pro Feature</p>
+                  <p className="text-xs text-warning-700 mt-1">Upgrade your workspace to the Pro plan to unlock your unique public storefront.</p>
+                </div>
+                <Button variant="primary" className="whitespace-nowrap">Upgrade to Pro</Button>
+              </div>
+            )}
+          </div>
+
           <div className="flex justify-end">
             <Button
               onClick={handleSave}

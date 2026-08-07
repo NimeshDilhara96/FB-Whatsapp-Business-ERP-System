@@ -2,9 +2,9 @@ import { useAuthStore } from "../store/authStore";
 import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children }) {
-    const token = useAuthStore((state) => state.accessToken);
+    const user = useAuthStore((state) => state.user);
 
-    if (!token) {
+    if (!user) {
         return <Navigate to="/login" />;
     }
 

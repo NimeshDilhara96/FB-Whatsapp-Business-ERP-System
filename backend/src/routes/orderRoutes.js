@@ -1,5 +1,5 @@
 import express from "express";
-import { authMiddleware } from "../middleware/authMiddleware.js";
+
 import { validate } from "../middleware/validate.js";
 import { createOrderSchema, updateOrderStatusSchema } from "../validators/orderValidator.js";
 import { 
@@ -11,10 +11,10 @@ import {
 
 const router = express.Router();
 
-// Secure the routes with authMiddleware
-router.post("/", authMiddleware, validate(createOrderSchema), createOrder);
-router.get("/", authMiddleware, getOrders);
-router.get("/customer/:customerId", authMiddleware, getCustomerOrders);
-router.patch("/:id/status", authMiddleware, validate(updateOrderStatusSchema), updateOrderDetails);
+// Secure the routes with authMiddleware (handled globally in server.js)
+router.post("/", validate(createOrderSchema), createOrder);
+router.get("/", getOrders);
+router.get("/customer/:customerId", getCustomerOrders);
+router.patch("/:id/status", validate(updateOrderStatusSchema), updateOrderDetails);
 
 export default router;

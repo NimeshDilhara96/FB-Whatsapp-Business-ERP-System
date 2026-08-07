@@ -21,13 +21,21 @@ const generateTokens = (user) => {
   return { accessToken, refreshToken };
 };
 
-// Helper to set cookie
 const setRefreshTokenCookie = (res, refreshToken) => {
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Must be 'none' for cross-domain
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+};
+
+const setAccessTokenCookie = (res, accessToken) => {
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 15 * 60 * 1000, // 15 minutes
   });
 };
 
@@ -44,6 +52,11 @@ export const registerTenant = async (req, res) => {
 
     // 2. Auto-generate a unique tenant ID (e.g. 16 char hex string)
     const generatedTenantId = crypto.randomBytes(8).toString("hex");
+
+    // 2.5 Generate a unique shopSlug
+    const baseSlug = companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+    const randomSuffix = crypto.randomBytes(3).toString("hex");
+    const shopSlug = `${baseSlug}-${randomSuffix}`;
 
     // 3. Hash the password securely
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -73,6 +86,7 @@ export const registerTenant = async (req, res) => {
       newTenant = await Tenant.create({
         tenantId: generatedTenantId,
         companyName,
+        shopSlug,
       });
     } catch (error) {
       // Rollback: if Tenant creation fails for any reason, delete the user we just created
@@ -87,18 +101,19 @@ export const registerTenant = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
 
-    // 8. Set HttpOnly cookie
+    // 8. Set HttpOnly cookies
     setRefreshTokenCookie(res, refreshToken);
+    setAccessTokenCookie(res, accessToken);
 
     res.status(201).json({
       message: "Workspace and Admin created successfully",
-      accessToken,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         tenantId: user.tenantId,
         companyName: newTenant.companyName,
+        shopSlug: newTenant.shopSlug,
         currency: newTenant.currency || "Rs.",
         subscription: newTenant.subscription,
         role: user.role
@@ -133,21 +148,22 @@ export const login = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
 
-    // Set cookie
+    // Set cookies
     setRefreshTokenCookie(res, refreshToken);
+    setAccessTokenCookie(res, accessToken);
 
     // Fetch the tenant to get the company name
     const tenant = await Tenant.findOne({ tenantId: user.tenantId });
 
     res.json({
       message: "Login successful",
-      accessToken,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         tenantId: user.tenantId,
         companyName: tenant ? tenant.companyName : "Unknown Workspace",
+        shopSlug: tenant ? tenant.shopSlug : null,
         currency: tenant ? tenant.currency : "Rs.",
         subscription: tenant ? tenant.subscription : null,
         role: user.role
@@ -184,10 +200,11 @@ export const refreshTokenController = async (req, res) => {
     user.refreshToken = newRefreshToken;
     await user.save();
 
-    // Set new cookie
+    // Set new cookies
     setRefreshTokenCookie(res, newRefreshToken);
+    setAccessTokenCookie(res, accessToken);
 
-    res.json({ accessToken });
+    res.json({ message: "Token refreshed successfully" });
   } catch (error) {
     res.status(403).json({ message: "Invalid or expired refresh token" });
   }
@@ -211,9 +228,42 @@ export const logout = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
 
     res.json({ message: "Logged out successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error during logout" });
+  }
+};
+
+// GET CURRENT USER (/me)
+export const getMe = async (req, res) => {
+  try {
+    const user = req.user; // Available from authMiddleware
+    const tenant = await Tenant.findOne({ tenantId: user.tenantId });
+
+    if (!tenant) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        tenantId: user.tenantId,
+        companyName: tenant.companyName,
+        shopSlug: tenant.shopSlug,
+        currency: tenant.currency || "Rs.",
+        subscription: tenant.subscription,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user details" });
   }
 };

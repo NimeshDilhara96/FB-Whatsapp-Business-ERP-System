@@ -13,29 +13,34 @@ const tenantSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    shopSlug: {
+      type: String,
+      unique: true,
+      index: true,
+    },
     currency: {
       type: String,
       default: "Rs.",
     },
     subscription: {
-      plan: { 
-        type: String, 
-        enum: ["Free", "Basic", "Pro"], 
-        default: "Pro" // ටෙස්ට් කරන නිසා හැමෝටම Pro දෙන්න
+      plan: {
+        type: String,
+        enum: ["Free", "Basic", "Pro"],
+        default: "Pro", // ටෙස්ට් කරන නිසා හැමෝටම Pro දෙන්න
       },
-      status: { 
-        type: String, 
-        enum: ["Active", "Expired", "Suspended"], 
-        default: "Active" 
+      status: {
+        type: String,
+        enum: ["Active", "Expired", "Suspended"],
+        default: "Active",
       },
-      expiresAt: { 
+      expiresAt: {
         type: Date,
         // 2030 වෙනකම් වලංගු වෙන විදිහට දාන්න (Testing වලට)
-        default: () => new Date("2030-12-31") 
-      }
+        default: () => new Date("2030-12-31"),
+      },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Tenant", tenantSchema);

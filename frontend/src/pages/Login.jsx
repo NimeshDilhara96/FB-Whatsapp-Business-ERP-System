@@ -28,21 +28,21 @@ export default function Login() {
       return setError("Please enter a valid email address.");
     }
 
-    try {
-      setIsLoading(true);
-      const res = await loginUser({ email, password });
-      login(res.data.user, res.data.accessToken);
-      navigate("/dashboard");
-    } catch (err) {
-      setIsLoading(false);
-      const data = err.response?.data;
-      if (data?.errors) {
-        setError(`Validation Error: ${data.errors.join(", ")}`);
-      } else {
-        setError(data?.message || "Login failed");
-      }
-    }
-  };
+        try {
+            setIsLoading(true);
+            const res = await loginUser({ email, password });
+            login(res.data.user);
+            navigate("/dashboard");
+        } catch (err) {
+            setIsLoading(false);
+            const data = err.response?.data;
+            if (data?.errors) {
+                setError(`Validation Error: ${data.errors.join(", ")}`);
+            } else {
+                setError(data?.message || "Login failed");
+            }
+        }
+    };
 
   return (
     <>

@@ -1,5 +1,6 @@
 import express from "express";
-import { registerTenant, login, refreshTokenController, logout } from "../controllers/authController.js";
+import { registerTenant, login, refreshTokenController, logout, getMe } from "../controllers/authController.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { validate } from "../middleware/validate.js";
@@ -28,5 +29,6 @@ router.post("/register", authLimiter, validate(registerSchema), registerTenant);
 router.post("/login", authLimiter, validate(loginSchema), login);
 router.post("/refresh", refreshTokenController);
 router.post("/logout", logout);
+router.get("/me", authMiddleware, getMe);
 
 export default router;
