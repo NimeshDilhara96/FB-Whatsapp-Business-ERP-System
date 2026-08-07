@@ -8,6 +8,15 @@ import Alert from "../components/ui/Alert";
 
 const changelogData = [
   {
+    version: "v1.0.4",
+    date: "August 08, 2026",
+    changes: [
+      "Adding online Store Feature",
+      "Added Subscription Plan feature",
+      "Security update",
+    ],
+  },
+  {
     version: "v1.0.3",
     date: "July 09, 2026",
     changes: ["Multiple tenant create issue fix(bug Fixed)"],
@@ -103,43 +112,70 @@ export default function Settings() {
           </div>
 
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-tx-main mb-2">Storefront Link</h3>
-            
-            {user?.subscription?.plan === 'Pro' ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={user?.shopSlug ? `${import.meta.env.VITE_STOREFRONT_URL || 'http://localhost:3000'}/${user.shopSlug}` : 'Not available'}
-                    className="w-full pl-4 pr-4 py-2.5 text-sm text-tx-main bg-base-bg border border-base-border rounded-lg focus:outline-none"
-                  />
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      if (user?.shopSlug) {
-                        navigator.clipboard.writeText(`${import.meta.env.VITE_STOREFRONT_URL || 'http://localhost:3000'}/${user.shopSlug}`);
-                        setSuccess("Storefront link copied to clipboard.");
+            <h3 className="text-sm font-medium text-tx-main mb-2">
+              Storefront Link
+            </h3>
+
+            <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-4">
+              <p className="text-sm font-bold text-primary-800">
+                Coming Soon! 🚀
+              </p>
+              <p className="text-xs text-primary-700 mt-1">
+                We are actively building the public storefront feature. Soon you'll be able to share a unique link with your customers to let them view your products directly!
+              </p>
+            </div>
+
+            <div className="hidden">
+              {user?.subscription?.plan === "Pro" ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={
+                        user?.shopSlug
+                          ? `${import.meta.env.VITE_STOREFRONT_URL || "http://localhost:3000"}/${user.shopSlug}`
+                          : "Not available"
                       }
-                    }}
-                    disabled={!user?.shopSlug}
-                  >
-                    Copy
+                      className="w-full pl-4 pr-4 py-2.5 text-sm text-tx-main bg-base-bg border border-base-border rounded-lg focus:outline-none"
+                    />
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        if (user?.shopSlug) {
+                          navigator.clipboard.writeText(
+                            `${import.meta.env.VITE_STOREFRONT_URL || "http://localhost:3000"}/${user.shopSlug}`,
+                          );
+                          setSuccess("Storefront link copied to clipboard.");
+                        }
+                      }}
+                      disabled={!user?.shopSlug}
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                  <p className="text-xs text-tx-muted mt-2">
+                    Share this link with your customers to let them view your
+                    available products.
+                  </p>
+                </>
+              ) : (
+                <div className="bg-warning-50 border border-warning-200 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-bold text-warning-800">
+                      Pro Feature
+                    </p>
+                    <p className="text-xs text-warning-700 mt-1">
+                      Upgrade your workspace to the Pro plan to unlock your unique
+                      public storefront.
+                    </p>
+                  </div>
+                  <Button variant="primary" className="whitespace-nowrap">
+                    Upgrade to Pro
                   </Button>
                 </div>
-                <p className="text-xs text-tx-muted mt-2">
-                  Share this link with your customers to let them view your available products.
-                </p>
-              </>
-            ) : (
-              <div className="bg-warning-50 border border-warning-200 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-bold text-warning-800">Pro Feature</p>
-                  <p className="text-xs text-warning-700 mt-1">Upgrade your workspace to the Pro plan to unlock your unique public storefront.</p>
-                </div>
-                <Button variant="primary" className="whitespace-nowrap">Upgrade to Pro</Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end">
