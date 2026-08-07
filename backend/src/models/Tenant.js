@@ -26,7 +26,7 @@ const tenantSchema = new mongoose.Schema(
       plan: {
         type: String,
         enum: ["Free", "Basic", "Pro"],
-        default: "Free", // ටෙස්ට් කරන නිසා හැමෝටම Pro දෙන්න
+        default: "Pro", // ටෙස්ට් කරන නිසා හැමෝටම Pro දෙන්න
       },
       status: {
         type: String,
