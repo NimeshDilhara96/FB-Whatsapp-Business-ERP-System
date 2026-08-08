@@ -14,6 +14,7 @@ import customerRoutes from "./src/routes/customerRoutes.js";
 import orderRoutes from "./src/routes/orderRoutes.js";
 import tenantRoutes from "./src/routes/tenantRoutes.js";
 import shopRoutes from "./src/routes/shopRoutes.js";
+import superAdminRoutes from "./src/routes/superAdminRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -65,6 +66,15 @@ const globalLimiter = rateLimit({
 });
 app.use("/api", globalLimiter);
 
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+    memoryUsage: process.memoryUsage(),
+  });
+});
+
 app.get("/", (req, res) => {
   res.send("ERP API Running...");
 });
@@ -83,6 +93,7 @@ app.use("/api/products", subscriptionMiddleware, productRoutes);
 app.use("/api/orders", subscriptionMiddleware, orderRoutes);
 app.use("/api/customers", subscriptionMiddleware, customerRoutes);
 app.use("/api/tenant", tenantRoutes);
+app.use("/api/superadmin", superAdminRoutes);
 
 // Global Error Handler Middleware
 app.use((err, req, res, next) => {
