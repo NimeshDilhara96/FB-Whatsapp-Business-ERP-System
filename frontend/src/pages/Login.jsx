@@ -32,7 +32,12 @@ export default function Login() {
             setIsLoading(true);
             const res = await loginUser({ email, password });
             login(res.data.user);
-            navigate("/dashboard");
+            
+            if (res.data.user.role === "superadmin") {
+                navigate("/superadmin/dashboard");
+            } else {
+                navigate("/dashboard");
+            }
         } catch (err) {
             setIsLoading(false);
             const data = err.response?.data;

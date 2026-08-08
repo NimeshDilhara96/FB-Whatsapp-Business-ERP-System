@@ -23,7 +23,10 @@ export const authMiddleware = async (req, res, next) => {
       }
 
       // 4. Automatically inject the exact tenant context securely from the database!
-      req.tenantId = req.user.tenantId;
+      // Bypass strict tenant isolation ONLY for superadmin
+      if (req.user.role !== "superadmin") {
+        req.tenantId = req.user.tenantId;
+      }
 
       next();
     } catch (error) {

@@ -13,6 +13,13 @@ import Products from "./pages/Products";
 import Settings from "./pages/Settings";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
+// Super Admin Imports
+import SuperAdminRoute from "./admin/routes/SuperAdminRoute";
+import SuperAdminLayout from "./admin/layouts/SuperAdminLayout";
+import SuperAdminDashboard from "./admin/pages/SuperAdminDashboard";
+import ManageTenants from "./admin/pages/ManageTenants";
+import ManageUsers from "./admin/pages/ManageUsers";
+
 export default function App() {
   const login = useAuthStore((state) => state.login);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -109,6 +116,20 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* super admin routes */}
+        <Route
+          path="/superadmin"
+          element={
+            <SuperAdminRoute>
+              <SuperAdminLayout />
+            </SuperAdminRoute>
+          }
+        >
+          <Route path="dashboard" element={<SuperAdminDashboard />} />
+          <Route path="tenants" element={<ManageTenants />} />
+          <Route path="users" element={<ManageUsers />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
