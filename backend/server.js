@@ -66,6 +66,15 @@ const globalLimiter = rateLimit({
 });
 app.use("/api", globalLimiter);
 
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+    memoryUsage: process.memoryUsage(),
+  });
+});
+
 app.get("/", (req, res) => {
   res.send("ERP API Running...");
 });
