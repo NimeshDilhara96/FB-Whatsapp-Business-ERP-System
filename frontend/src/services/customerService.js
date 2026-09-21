@@ -1,8 +1,8 @@
 // src/services/customerService.js
 import API from "../api/api";
 
-export const getCustomers = async () => {
-  const response = await API.get("/customers");
+export const getCustomers = async (page = 1, limit = 50) => {
+  const response = await API.get(`/customers?page=${page}&limit=${limit}`);
   return response.data;
 };
 

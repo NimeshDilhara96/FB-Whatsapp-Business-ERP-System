@@ -11,6 +11,7 @@ import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import Alert from "../components/ui/Alert";
 import { useAuthStore } from "../store/authStore";
+import Pagination from "../components/ui/Pagination";
 
 const Products = () => {
   const user = useAuthStore((state) => state.user);
@@ -25,34 +26,33 @@ const Products = () => {
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({});
 
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(1);
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (currentPage = page) => {
     try {
-      const response = await getProducts();
+      const response = await getProducts(currentPage);
 
-      // 🛑 DEBUGGING: මේකෙන් බලන්න පුළුවන් Backend එකෙන් හරියටම එන්නේ මොකක්ද කියලා
-      console.log("Backend Response:", response);
+      const payload = response.data || response;
 
-      // 🛡️ SAFE STATE UPDATE: එන Data එක Array එකක් නම් විතරක් State එකට දානවා
-      if (Array.isArray(response)) {
-        setProducts(response);
-      } else if (response && Array.isArray(response.data)) {
-        // සමහර වෙලාවට Axios වලින් data කියන object එක ඇතුළේ අරන් එන්නේ
-        setProducts(response.data);
-      } else if (response && Array.isArray(response.products)) {
-        // සමහර වෙලාවට Backend එකෙන් { products: [...] } විදිහට එව්වොත්
-        setProducts(response.products);
+      if (payload && Array.isArray(payload.data)) {
+        setProducts(payload.data);
+        if (payload.pagination) setPagination(payload.pagination);
+      } else if (Array.isArray(payload)) {
+        setProducts(payload);
+      } else if (payload && Array.isArray(payload.products)) {
+        setProducts(payload.products);
       } else {
         console.error("අවුලක්! Array එකක් නෙවෙයි ආවේ:", response);
-        setProducts([]); // කෝඩ් එක Crash වෙන එක නවත්වන්න හිස් Array එකක් දානවා
+        setProducts([]);
       }
     } catch (error) {
       console.error("Failed to fetch products:", error);
-      setProducts([]); // Error එකක් ආවත් Crash වෙන්නේ නැති වෙන්න හිස් Array එකක් දෙනවා
+      setProducts([]);
     }
   };
 
@@ -89,9 +89,12 @@ const Products = () => {
       if (editingId) {
         await updateProduct(editingId, dataToSubmit);
         setSuccess("Product updated successfully!");
+        fetchProducts(page);
       } else {
         await createProduct(dataToSubmit);
         setSuccess("Product added successfully!");
+        setPage(1);
+        fetchProducts(1);
       }
       setFormData({
         name: "",
@@ -101,7 +104,6 @@ const Products = () => {
         stockQuantity: "",
       });
       setEditingId(null);
-      fetchProducts();
     } catch (error) {
       setError(error.response?.data?.message || "Error saving product");
     }
@@ -139,7 +141,7 @@ const Products = () => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
         await deleteProduct(id);
-        fetchProducts();
+        fetchProducts(page);
       } catch (error) {
         alert("Failed to delete product");
       }
@@ -301,6 +303,13 @@ const Products = () => {
             </tbody>
           </table>
         </div>
+        <Pagination 
+          pagination={pagination} 
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchProducts(newPage);
+          }} 
+        />
       </Card>
     </DashboardLayout>
   );

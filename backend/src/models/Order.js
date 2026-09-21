@@ -3,6 +3,11 @@ import mongoose from "mongoose";
 
 // First, we create a small schema for the items inside the order
 const orderItemSchema = new mongoose.Schema({
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product",
+    required: false, // Optional for backward compatibility with old orders
+  },
   productName: {
     type: String,
     required: true,
@@ -16,6 +21,14 @@ const orderItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  costPriceSnapshot: {
+    type: Number,
+    required: false, // Optional for backward compatibility with old orders
+  },
+  _migratedCost: {
+    type: Boolean,
+    required: false, // Migration marker for safe rollbacks
+  }
 });
 
 // Now, we create the main Order schema
@@ -75,5 +88,11 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true }, // Automatically adds createdAt and updatedAt
 );
+
+// Compound index to drastically speed up date-filtered analytics queries per tenant
+orderSchema.index({ tenantId: 1, createdAt: -1 });
+
+// Index for fetching a customer's specific orders efficiently
+orderSchema.index({ customerId: 1 });
 
 export default mongoose.model("Order", orderSchema);

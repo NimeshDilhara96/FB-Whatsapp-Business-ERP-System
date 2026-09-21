@@ -31,7 +31,8 @@ const Orders = () => {
 
   const fetchProductsData = async () => {
     try {
-      const data = await getProducts();
+      const res = await getProducts();
+      const data = res.data; // Axios unwrapping
       if (Array.isArray(data)) {
         setProducts(data);
       } else if (data && Array.isArray(data.data)) {
@@ -47,7 +48,8 @@ const Orders = () => {
   // customers fetch from backend
   const fetchCustomersData = async () => {
     try {
-      const data = await getCustomers();
+      const res = await getCustomers();
+      const data = res.data; // Axios unwrapping
       if (Array.isArray(data)) {
         setCustomers(data);
       } else if (data && Array.isArray(data.data)) {

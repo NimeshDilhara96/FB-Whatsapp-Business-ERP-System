@@ -1,7 +1,7 @@
 import API from "../api/api";
 
-export const getOrders = async () => {
-  const response = await API.get("/orders");
+export const getOrders = async (page = 1, limit = 50) => {
+  const response = await API.get(`/orders?page=${page}&limit=${limit}`);
   return response.data;
 };
 

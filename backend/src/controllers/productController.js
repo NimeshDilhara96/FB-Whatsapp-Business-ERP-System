@@ -17,7 +17,7 @@ export const createProduct = async (req, res) => {
       product: savedProduct,
     });
   } catch (error) {
-    console.error("Create Product Error:", error);
+    req.log.error({ err: error }, "Create Product Error");
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -26,13 +26,30 @@ export const createProduct = async (req, res) => {
 export const getProducts = async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
 
-    // Only fetch products that belong to this tenant, .lean() speeds it up
-    const products = await Product.find({ tenantId: tenantId }).lean();
+    // Run count and find concurrently for performance
+    const [totalItems, products] = await Promise.all([
+      Product.countDocuments({ tenantId: tenantId }),
+      Product.find({ tenantId: tenantId })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+    ]);
 
-    res.status(200).json(products);
+    res.status(200).json({
+      data: products,
+      pagination: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+        limit
+      }
+    });
   } catch (error) {
-    console.error("Get Products Error:", error);
+    req.log.error({ err: error }, "Get Products Error");
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -59,7 +76,7 @@ export const updateProduct = async (req, res) => {
       product: updatedProduct,
     });
   } catch (error) {
-    console.error("Update Product Error:", error);
+    req.log.error({ err: error }, "Update Product Error");
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -84,7 +101,7 @@ export const deleteProduct = async (req, res) => {
 
     res.json({ message: "Product deleted successfully" });
   } catch (error) {
-    console.error("Delete Product Error:", error);
+    req.log.error({ err: error }, "Delete Product Error");
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

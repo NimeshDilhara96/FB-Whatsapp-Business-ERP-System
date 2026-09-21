@@ -1,20 +1,15 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuthStore } from "../store/authStore";
 import Card from "../components/ui/Card";
-import { getOrders } from "../services/orderService";
-import { getProducts } from "../services/productService";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import CustomerSidePanel from "../components/customers/CustomerSidePanel";
-import { getCustomers } from "../services/customerService";
 
 export default function Dashboard() {
     const user = useAuthStore((state) => state.user);
-    const [orders, setOrders] = useState([]);
-    const [products, setProducts] = useState([]);
-    const [customers, setCustomers] = useState([]);
+    const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [dateFilter, setDateFilter] = useState('7');
     const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -23,24 +18,9 @@ export default function Dashboard() {
         const fetchDashboardData = async () => {
             setLoading(true);
             try {
-                const [ordersData, productsData, customersData] = await Promise.all([
-                    getOrders(),
-                    getProducts(),
-                    getCustomers()
-                ]);
-                
-                setOrders(ordersData || []);
-                setCustomers(customersData || []);
-
-                if (Array.isArray(productsData)) {
-                    setProducts(productsData);
-                } else if (productsData && Array.isArray(productsData.data)) {
-                    setProducts(productsData.data);
-                } else if (productsData && Array.isArray(productsData.products)) {
-                    setProducts(productsData.products);
-                } else {
-                    setProducts([]);
-                }
+                const { getDashboardAnalytics } = await import('../services/analyticsService');
+                const data = await getDashboardAnalytics(dateFilter);
+                setDashboardData(data);
             } catch (error) {
                 console.error("Failed to fetch dashboard data", error);
             } finally {
@@ -49,165 +29,17 @@ export default function Dashboard() {
         };
 
         fetchDashboardData();
-    }, []);
+    }, [dateFilter]);
 
-    // Calculate metrics
+    // Extract metrics with defaults
     const { 
-        ordersToday, totalRevenue, pendingRevenue, lowStockCount, returnedOrdersCount,
-        inventoryValue, totalProfit, activeFunnel, totalCustomersCount, newCustomersCount
-    } = useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        ordersToday = 0, totalRevenue = 0, pendingRevenue = 0, lowStockCount = 0, returnedOrdersCount = 0,
+        inventoryValue = 0, totalProfit = 0, activeFunnel = { Pending: 0, Processing: 0, Shipped: 0, Delivered: 0 }, 
+        totalCustomersCount = 0, newCustomersCount = 0,
+        chartData = [], topProducts = [], topCustomers = [], sourceData = [], recentPendingOrders = []
+    } = dashboardData || {};
 
-        let tRev = 0;
-        let pRev = 0;
-        let tCost = 0;
-        let activeFunnel = { Pending: 0, Processing: 0, Shipped: 0, Delivered: 0 };
-
-        orders.forEach(o => {
-            if (activeFunnel[o.orderStatus] !== undefined) {
-                activeFunnel[o.orderStatus]++;
-            }
-
-            if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return;
-            
-            if (o.paymentStatus === "Paid") {
-                tRev += (o.totalAmount || 0);
-                // Calculate cost of goods sold for profit
-                o.items?.forEach(item => {
-                    const prod = products.find(p => p.name === item.productName);
-                    if (prod && prod.costPrice) {
-                        tCost += prod.costPrice * item.quantity;
-                    }
-                });
-            } else {
-                pRev += (o.totalAmount || 0);
-            }
-        });
-
-        const invVal = products.reduce((sum, p) => sum + ((p.price || 0) * (p.stockQuantity || 0)), 0);
-
-        return {
-            ordersToday: orders.filter(o => new Date(o.createdAt) >= today).length,
-            totalRevenue: tRev,
-            pendingRevenue: pRev,
-            lowStockCount: products.filter(p => p.stockQuantity < 5).length,
-            returnedOrdersCount: orders.filter(o => o.orderStatus === "Returned").length,
-            totalProfit: tRev - tCost,
-            inventoryValue: invVal,
-            activeFunnel,
-            totalCustomersCount: customers.length,
-            newCustomersCount: customers.filter(c => new Date(c.createdAt) >= today).length,
-        };
-    }, [orders, products, customers]);
-
-    const { chartData, topProducts, topCustomers, sourceData } = useMemo(() => {
-        const now = new Date();
-        const filterDate = new Date();
-        if (dateFilter === '7') {
-            filterDate.setDate(now.getDate() - 7);
-        } else if (dateFilter === '30') {
-            filterDate.setDate(now.getDate() - 30);
-        } else {
-            filterDate.setFullYear(2000); 
-        }
-
-        const filteredOrders = orders.filter(o => new Date(o.createdAt) >= filterDate);
-
-        // Chart Data
-        let chartData = [];
-        if (dateFilter === 'all') {
-            const sortedFiltered = [...filteredOrders].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-            const allMap = new Map();
-            sortedFiltered.forEach(o => {
-                if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return;
-                if (o.paymentStatus !== "Paid") return;
-                
-                const dateStr = new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                allMap.set(dateStr, (allMap.get(dateStr) || 0) + (o.totalAmount || 0));
-            });
-            chartData = Array.from(allMap, ([date, sales]) => ({ date, sales }));
-        } else {
-            const salesDataMap = {};
-            const daysToIterate = parseInt(dateFilter);
-            for (let i = daysToIterate - 1; i >= 0; i--) {
-                const d = new Date(now);
-                d.setDate(now.getDate() - i);
-                const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                salesDataMap[dateStr] = 0;
-            }
-            filteredOrders.forEach(o => {
-                if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return;
-                if (o.paymentStatus !== "Paid") return;
-
-                const dateStr = new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                if (salesDataMap[dateStr] !== undefined) {
-                    salesDataMap[dateStr] += (o.totalAmount || 0);
-                }
-            });
-            chartData = Object.keys(salesDataMap).map(date => ({
-                date,
-                sales: salesDataMap[date]
-            }));
-        }
-
-        // Top Products
-        const productSales = {};
-        filteredOrders.forEach(o => {
-            if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return;
-            o.items?.forEach(item => {
-                const name = item.productName;
-                productSales[name] = (productSales[name] || 0) + (item.quantity || 0);
-            });
-        });
-        const topProducts = Object.entries(productSales)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5)
-            .map(([name, sales]) => ({ name, sales }));
-
-        // Top Customers
-        const customerSales = {};
-        filteredOrders.forEach(o => {
-            if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return;
-            const customer = o.customerId;
-            if (customer && customer.name) {
-                const id = customer._id || customer;
-                if (!customerSales[id]) {
-                    customerSales[id] = { name: customer.name, total: 0 };
-                }
-                customerSales[id].total += (o.totalAmount || 0);
-            }
-        });
-        const topCustomers = Object.values(customerSales)
-            .sort((a, b) => b.total - a.total)
-            .slice(0, 5);
-
-        // Orders by Source
-        const sourceCounts = {};
-        filteredOrders.forEach(o => {
-            if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return;
-            const source = o.source || 'WhatsApp';
-            sourceCounts[source] = (sourceCounts[source] || 0) + (o.totalAmount || 0);
-        });
-        const SOURCE_COLORS = {
-            'WhatsApp': '#25D366', 
-            'Facebook': '#1877F2',
-            'Website': '#8B5CF6',
-            'Other': '#6B7280'
-        };
-        const sourceData = Object.entries(sourceCounts)
-            .map(([name, value]) => ({ name, value, color: SOURCE_COLORS[name] || '#6B7280' }))
-            .sort((a, b) => b.value - a.value);
-
-        return { chartData, topProducts, topCustomers, sourceData };
-    }, [orders, dateFilter]);
-
-    const pendingOrders = useMemo(() => {
-        return orders
-            .filter(o => o.orderStatus === 'Pending')
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 5);
-    }, [orders]);
+    const pendingOrders = recentPendingOrders;
 
     return (
         <DashboardLayout>
@@ -417,7 +249,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-tx-main">Pending Orders</h3>
                         <span className="px-2.5 py-1 text-xs font-semibold bg-warning-900/30 text-warning-400 rounded-full">
-                            {orders.filter(o => o.orderStatus === 'Pending').length} Total
+                            {loading ? "..." : activeFunnel.Pending} Total
                         </span>
                     </div>
                     <div className="flex flex-col gap-3">

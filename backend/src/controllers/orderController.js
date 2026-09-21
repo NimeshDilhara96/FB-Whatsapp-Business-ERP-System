@@ -1,13 +1,23 @@
+import mongoose from "mongoose";
 import Order from "../models/Order.js";
-import Customer from "../models/Customer.js"; // 👈 We need this to search/create customers
+import Customer from "../models/Customer.js";
 import Product from "../models/Product.js";
+import { hasTransactionSupport } from "../config/db.js";
 
 // 1. Create a new order (Smart "Find or Create" Customer Logic)
 export const createOrder = async (req, res) => {
+  let session = null;
+  if (hasTransactionSupport) {
+    session = await mongoose.startSession();
+    session.startTransaction();
+  }
+
+  // Helper to pass session only if it exists
+  const sessionOpt = session ? { session } : {};
+
   try {
     const tenantId = req.user.tenantId;
 
-    // Destructure everything coming from the frontend form
     const {
       customerName,
       whatsappNumber,
@@ -17,15 +27,15 @@ export const createOrder = async (req, res) => {
       totalAmount,
       source,
       paymentMethod,
+      externalEventId, // Future-proofing for Meta/WhatsApp idempotency
     } = req.body;
 
-    // STEP 1: Check if this customer already exists in this business
+    // STEP 1: Smart "Find or Create" Customer Logic
     let customer = await Customer.findOne({
       whatsappNumber: whatsappNumber,
       tenantId: tenantId,
-    });
+    }, null, sessionOpt);
 
-    // STEP 2: If customer DOES NOT exist, create them automatically!
     if (!customer) {
       customer = new Customer({
         name: customerName,
@@ -34,63 +44,95 @@ export const createOrder = async (req, res) => {
         city: city || "",
         tenantId: tenantId,
       });
-      await customer.save(); // Saved to customer database!
+      await customer.save(sessionOpt);
     }
 
-    // STEP 2.5: Check product stock availability
+    // STEP 2: Pre-validate stock and enrich items with historical cost
+    const enrichedItems = [];
     for (const item of items) {
       if (item.productName && item.quantity) {
-        const product = await Product.findOne({
-          name: item.productName,
-          tenantId: tenantId,
-        });
+        // Prefer productId over productName if provided by the trusted backend environment
+        const query = { tenantId: tenantId };
+        if (item.productId) {
+          query._id = item.productId;
+        } else {
+          query.name = item.productName;
+        }
+
+        const product = await Product.findOne(query, null, sessionOpt);
         if (!product) {
-          return res
-            .status(400)
-            .json({ message: `Product not found: ${item.productName}` });
+          throw new Error(`Product not found: ${item.productName}`);
         }
         if (product.stockQuantity < item.quantity) {
-          return res.status(400).json({
-            message: `Insufficient stock for ${item.productName}. Only ${product.stockQuantity} available.`,
-          });
+          throw new Error(`Insufficient stock for ${item.productName}. Only ${product.stockQuantity} available.`);
         }
+
+        enrichedItems.push({
+          productId: product._id,
+          productName: product.name,
+          quantity: item.quantity,
+          price: item.price,
+          costPriceSnapshot: product.costPrice || 0,
+        });
       }
     }
 
-    // STEP 3: Now create the order using the customer's ID (whether old or new)
+    // STEP 3: Decrement Stock Atomically (Race Condition Protection)
+    for (const item of enrichedItems) {
+      const updatedProduct = await Product.findOneAndUpdate(
+        { 
+          _id: item.productId, 
+          tenantId: tenantId,
+          stockQuantity: { $gte: item.quantity } // CRITICAL: Atomic stock check
+        },
+        { $inc: { stockQuantity: -item.quantity } },
+        { new: true, ...sessionOpt }
+      );
+
+      if (!updatedProduct) {
+        throw new Error(`Concurrency conflict or insufficient stock for ${item.productName} during checkout.`);
+      }
+    }
+
+    // STEP 4: Create Order
     const method = paymentMethod || "Cash on Delivery";
     const isPaidMethod = method === "Online Payment";
 
     const newOrder = new Order({
       tenantId: tenantId,
-      customerId: customer._id, // This links the order to the customer
-      items: items,
+      customerId: customer._id,
+      items: enrichedItems,
       totalAmount: totalAmount,
       source: source || "WhatsApp",
       paymentMethod: method,
       paymentStatus: isPaidMethod ? "Paid" : "Pending",
     });
 
-    const savedOrder = await newOrder.save();
+    const savedOrder = await newOrder.save(sessionOpt);
 
-    // STEP 4: Reduce product stock quantities
-    for (const item of items) {
-      if (item.productName && item.quantity) {
-        await Product.findOneAndUpdate(
-          { name: item.productName, tenantId: tenantId },
-          { $inc: { stockQuantity: -item.quantity } },
-        );
-      }
+    // Commit Transaction
+    if (session) {
+      await session.commitTransaction();
+      session.endSession();
     }
 
     res.status(201).json({
       message: "Order created successfully",
       order: savedOrder,
-      customer: customer, // We can send back the customer info too
+      customer: customer,
     });
   } catch (error) {
-    console.error("Create Order Error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+    
+    // Convert expected user errors to 400 Bad Request, keep others as 500
+    const isUserError = error.message.includes("not found") || error.message.includes("Insufficient") || error.message.includes("Concurrency");
+    const statusCode = isUserError ? 400 : 500;
+    
+    req.log.error({ err: error }, "Create Order Error");
+    res.status(statusCode).json({ message: error.message || "Internal Server Error" });
   }
 };
 
@@ -98,15 +140,31 @@ export const createOrder = async (req, res) => {
 export const getOrders = async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
 
-    const orders = await Order.find({ tenantId: tenantId })
-      .populate("customerId", "name whatsappNumber address city notes")
-      .sort({ createdAt: -1 })
-      .lean();
+    const [totalItems, orders] = await Promise.all([
+      Order.countDocuments({ tenantId: tenantId }),
+      Order.find({ tenantId: tenantId })
+        .populate("customerId", "name whatsappNumber address city notes")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+    ]);
 
-    res.status(200).json(orders);
+    res.status(200).json({
+      data: orders,
+      pagination: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+        limit
+      }
+    });
   } catch (error) {
-    console.error("Get Orders Error:", error);
+    req.log.error({ err: error }, "Get Orders Error");
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -123,7 +181,7 @@ export const getCustomerOrders = async (req, res) => {
 
     res.status(200).json(orders);
   } catch (error) {
-    console.error("Get Customer Orders Error:", error);
+    req.log.error({ err: error }, "Get Customer Orders Error");
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

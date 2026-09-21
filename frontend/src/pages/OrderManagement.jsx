@@ -4,6 +4,7 @@ import Card from "../components/ui/Card";
 import { getOrders, updateOrderDetails } from "../services/orderService";
 import CustomerSidePanel from "../components/customers/CustomerSidePanel";
 import { useAuthStore } from "../store/authStore";
+import Pagination from "../components/ui/Pagination";
 
 const OrderManagement = () => {
   const user = useAuthStore((state) => state.user);
@@ -12,6 +13,8 @@ const OrderManagement = () => {
   const [activeTab, setActiveTab] = useState("new_orders");
   const [historyFilter, setHistoryFilter] = useState("all");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({});
 
   // Tab Definitions
   const tabs = [
@@ -21,11 +24,18 @@ const OrderManagement = () => {
     { id: "history", label: "History" },
   ];
 
-  const fetchOrders = async (showLoading = true) => {
+  const fetchOrders = async (showLoading = true, currentPage = page) => {
     if (showLoading) setLoading(true);
     try {
-      const data = await getOrders();
-      setOrders(data);
+      const response = await getOrders(currentPage);
+      const payload = response.data || response;
+      
+      if (payload && Array.isArray(payload.data)) {
+        setOrders(payload.data);
+        if (payload.pagination) setPagination(payload.pagination);
+      } else if (Array.isArray(payload)) {
+        setOrders(payload);
+      }
     } catch (err) {
       console.error("Failed to fetch orders", err);
     } finally {
@@ -34,7 +44,7 @@ const OrderManagement = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(true, 1);
   }, []);
 
   const handleDetailsChange = async (orderId, updates) => {
@@ -56,11 +66,11 @@ const OrderManagement = () => {
 
     try {
       await updateOrderDetails(orderId, updates);
-      fetchOrders(false); // Silent background refresh
+      fetchOrders(false, page); // Silent background refresh
     } catch (error) {
       console.error("Failed to update status", error);
       alert("Failed to update status");
-      fetchOrders(false); // Revert UI if failed
+      fetchOrders(false, page); // Revert UI if failed
     }
   };
 
@@ -379,6 +389,13 @@ const OrderManagement = () => {
             </table>
           </div>
         )}
+        <Pagination 
+          pagination={pagination} 
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchOrders(true, newPage);
+          }} 
+        />
       </Card>
     </DashboardLayout>
   );

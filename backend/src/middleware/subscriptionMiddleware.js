@@ -34,7 +34,7 @@ export const subscriptionMiddleware = async (req, res, next) => {
     req.subscription = subscription;
     next();
   } catch (error) {
-    console.error("Subscription Middleware Error:", error);
+    req.log.error({ err: error }, "Subscription Middleware Error");
     res.status(500).json({ message: "Server error verifying subscription" });
   }
 };

@@ -37,4 +37,7 @@ const productSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Compound index for ultra-fast analytics lookups (fallback cost price)
+productSchema.index({ tenantId: 1, name: 1 });
+
 export default mongoose.model("Product", productSchema);

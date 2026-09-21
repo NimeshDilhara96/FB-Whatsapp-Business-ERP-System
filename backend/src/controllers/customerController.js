@@ -27,7 +27,7 @@ export const createCustomer = async (req, res) => {
       .status(201)
       .json({ message: "Customer added successfully", customer: newCustomer });
   } catch (error) {
-    console.error("Create Customer Error:", error);
+    req.log.error({ err: error }, "Create Customer Error");
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -35,13 +35,31 @@ export const createCustomer = async (req, res) => {
 // 2. get own business customers only
 export const getCustomers = async (req, res) => {
   try {
-    //  own business customers only tenantId only
-    const customers = await Customer.find({ tenantId: req.user.tenantId }).sort(
-      { createdAt: -1 },
-    );
-    res.json(customers);
+    const tenantId = req.user.tenantId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+
+    const [totalItems, customers] = await Promise.all([
+      Customer.countDocuments({ tenantId: tenantId }),
+      Customer.find({ tenantId: tenantId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+    ]);
+      
+    res.json({
+      data: customers,
+      pagination: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+        limit
+      }
+    });
   } catch (error) {
-    console.error("Get Customers Error:", error);
+    req.log.error({ err: error }, "Get Customers Error");
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -69,7 +87,7 @@ export const updateCustomer = async (req, res) => {
       customer: updatedCustomer,
     });
   } catch (error) {
-    console.error("Update Customer Error:", error);
+    req.log.error({ err: error }, "Update Customer Error");
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -94,7 +112,7 @@ export const deleteCustomer = async (req, res) => {
 
     res.json({ message: "Customer deleted successfully" });
   } catch (error) {
-    console.error("Delete Customer Error:", error);
+    req.log.error({ err: error }, "Delete Customer Error");
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

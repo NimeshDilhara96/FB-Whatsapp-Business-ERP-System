@@ -34,7 +34,7 @@ export const getShopDetails = async (req, res) => {
       products,
     });
   } catch (error) {
-    console.error("Error fetching shop details:", error);
+    req.log.error({ err: error }, "Error fetching shop details");
     res.status(500).json({ message: "Server error" });
   }
 };

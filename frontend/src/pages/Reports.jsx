@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/ui/Card";
-import { getOrders } from "../services/orderService";
-import { getProducts } from "../services/productService";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -11,26 +9,16 @@ import { useAuthStore } from "../store/authStore";
 
 const Reports = () => {
   const user = useAuthStore((state) => state.user);
-  const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [timeframe, setTimeframe] = useState("all");
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [ordersData, productsData] = await Promise.all([
-          getOrders(),
-          getProducts()
-      ]);
-      setOrders(ordersData || []);
-      
-      // Ensure products is an array
-      let prods = [];
-      if (Array.isArray(productsData)) prods = productsData;
-      else if (productsData?.data) prods = productsData.data;
-      else if (productsData?.products) prods = productsData.products;
-      setProducts(prods);
+      const { getReportAnalytics } = await import('../services/analyticsService');
+      const data = await getReportAnalytics(timeframe);
+      setReportData(data);
     } catch (err) {
       console.error("Failed to fetch data", err);
     } finally {
@@ -40,212 +28,16 @@ const Reports = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [timeframe]);
 
-  // Filter orders based on the selected timeframe
-  const filteredOrders = useMemo(() => {
-    const now = new Date();
-    
-    return orders.filter(order => {
-      const orderDate = new Date(order.createdAt);
-      
-      switch (timeframe) {
-        case "today": {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          return orderDate >= today;
-        }
-        case "7days": {
-          const sevenDaysAgo = new Date();
-          sevenDaysAgo.setDate(now.getDate() - 7);
-          return orderDate >= sevenDaysAgo;
-        }
-        case "28days": {
-          const twentyEightDaysAgo = new Date();
-          twentyEightDaysAgo.setDate(now.getDate() - 28);
-          return orderDate >= twentyEightDaysAgo;
-        }
-        case "month": {
-          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-          return orderDate >= startOfMonth;
-        }
-        case "all":
-        default:
-          return true;
-      }
-    });
-  }, [orders, timeframe]);
-
-  // Calculate generic metrics
   const {
-      totalOrders, totalRevenue, pendingRevenue, returnedOrders, cancelledOrders, returnRate,
-      totalFilteredProfit, aov,
-      topProducts, topCustomers, orderStatusData, chartData, sourceData
-  } = useMemo(() => {
-      const totalOrders = filteredOrders.length;
-      let totalFilteredProfit = 0;
-      let totalFilteredCost = 0;
+      totalOrders = 0, totalRevenue = 0, pendingRevenue = 0, returnedOrders = 0, cancelledOrders = 0, returnRate = 0,
+      totalFilteredProfit = 0, aov = 0,
+      topProducts = [], topCustomers = [], orderStatusData = [], chartData = [], sourceData = [],
+      quickStats = { salesToday: 0, profitToday: 0, salesThisWeek: 0, profitThisWeek: 0, salesThisMonth: 0, profitThisMonth: 0 }
+  } = reportData || {};
 
-      const totalRevenue = filteredOrders.reduce((sum, o) => {
-        if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return sum;
-        if (o.paymentStatus !== "Paid") return sum;
-        
-        const rev = o.totalAmount || 0;
-        let cost = 0;
-        o.items?.forEach(item => {
-            const prod = products.find(p => p.name === item.productName);
-            if (prod && prod.costPrice) {
-                cost += prod.costPrice * item.quantity;
-            }
-        });
-        totalFilteredCost += cost;
-        totalFilteredProfit += (rev - cost);
-        
-        return sum + rev;
-      }, 0);
-
-      const aov = totalOrders > 0 ? (totalRevenue / totalOrders) : 0;
-
-      const pendingRevenue = filteredOrders.reduce((sum, o) => {
-        if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return sum;
-        if (o.paymentStatus === "Paid") return sum;
-        return sum + (o.totalAmount || 0);
-      }, 0);
-
-      const returnedOrders = filteredOrders.filter(o => o.orderStatus === "Returned").length;
-      const cancelledOrders = filteredOrders.filter(o => o.orderStatus === "Cancelled").length;
-      const returnRate = totalOrders > 0 ? ((returnedOrders / totalOrders) * 100).toFixed(1) : 0;
-
-      // Top Products (by Profit & Quantity)
-      const productStats = {};
-      filteredOrders.forEach(o => {
-          if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return;
-          if (o.paymentStatus !== "Paid") return;
-          o.items?.forEach(item => {
-              const name = item.productName;
-              if (!productStats[name]) productStats[name] = { sales: 0, profit: 0 };
-              productStats[name].sales += (item.quantity || 0);
-
-              const prod = products.find(p => p.name === name);
-              const cost = (prod && prod.costPrice) ? prod.costPrice : 0;
-              const itemRev = (item.price || 0) * (item.quantity || 0);
-              productStats[name].profit += (itemRev - (cost * item.quantity));
-          });
-      });
-      const topProducts = Object.entries(productStats)
-          .sort((a, b) => b[1].profit - a[1].profit) // Sort by Profit
-          .slice(0, 5)
-          .map(([name, stats]) => ({ name, sales: stats.sales, profit: stats.profit }));
-
-      // Top Customers
-      const customerSales = {};
-      filteredOrders.forEach(o => {
-          if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return;
-          const customer = o.customerId;
-          if (customer && customer.name) {
-              const id = customer._id || customer;
-              if (!customerSales[id]) {
-                  customerSales[id] = { name: customer.name, total: 0 };
-              }
-              customerSales[id].total += (o.totalAmount || 0);
-          }
-      });
-      const topCustomers = Object.values(customerSales)
-          .sort((a, b) => b.total - a.total)
-          .slice(0, 5);
-
-      // Order Status Distribution
-      const statusCounts = {};
-      filteredOrders.forEach(o => {
-          statusCounts[o.orderStatus] = (statusCounts[o.orderStatus] || 0) + 1;
-      });
-      const COLORS = {
-          'Pending': '#F59E0B', 
-          'Processing': '#3B82F6',
-          'Shipped': '#8B5CF6',
-          'Delivered': '#10B981',
-          'Completed': '#059669',
-          'Cancelled': '#EF4444',
-          'Returned': '#F97316'
-      };
-      const orderStatusData = Object.entries(statusCounts).map(([name, value]) => ({ name, value, color: COLORS[name] || '#6B7280' }));
-
-      // Chart Data (Paid Only)
-      const sortedFiltered = [...filteredOrders].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-      const allMap = new Map();
-      sortedFiltered.forEach(o => {
-          if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return;
-          if (o.paymentStatus !== "Paid") return;
-          
-          const dateStr = new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          allMap.set(dateStr, (allMap.get(dateStr) || 0) + (o.totalAmount || 0));
-      });
-      const chartData = Array.from(allMap, ([date, sales]) => ({ date, sales }));
-
-      // Order Source Distribution (Paid Only)
-      const sourceCounts = {};
-      filteredOrders.forEach(o => {
-          if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return;
-          if (o.paymentStatus !== "Paid") return;
-          
-          const source = o.source || 'WhatsApp';
-          sourceCounts[source] = (sourceCounts[source] || 0) + (o.totalAmount || 0);
-      });
-      const SOURCE_COLORS = {
-          'WhatsApp': '#25D366', 
-          'Facebook': '#1877F2',
-          'Website': '#8B5CF6',
-          'Other': '#6B7280'
-      };
-      const sourceData = Object.entries(sourceCounts).map(([name, value]) => ({ name, value, color: SOURCE_COLORS[name] || '#6B7280' }));
-
-      return {
-          totalOrders, totalRevenue, pendingRevenue, returnedOrders, cancelledOrders, returnRate,
-          totalFilteredProfit, aov,
-          topProducts, topCustomers, orderStatusData, chartData, sourceData
-      };
-  }, [filteredOrders, products]);
-
-  // Overall quick stats (Daily, Weekly, Monthly) independent of filter
-  const { salesToday, salesThisWeek, salesThisMonth, profitToday, profitThisWeek, profitThisMonth } = useMemo(() => {
-      let sToday = 0, sWeek = 0, sMonth = 0;
-      let pToday = 0, pWeek = 0, pMonth = 0;
-      const now = new Date();
-      
-      const todayStart = new Date(now);
-      todayStart.setHours(0,0,0,0);
-      
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - now.getDay());
-      weekStart.setHours(0,0,0,0);
-
-      const monthStart = new Date(now);
-      monthStart.setDate(1);
-      monthStart.setHours(0,0,0,0);
-
-      orders.forEach(o => {
-          if (o.orderStatus === "Returned" || o.orderStatus === "Cancelled") return;
-          if (o.paymentStatus !== "Paid") return;
-          
-          const d = new Date(o.createdAt);
-          const amount = o.totalAmount || 0;
-          
-          let cost = 0;
-          o.items?.forEach(item => {
-              const prod = products.find(p => p.name === item.productName);
-              if (prod && prod.costPrice) {
-                  cost += prod.costPrice * item.quantity;
-              }
-          });
-          const profit = amount - cost;
-
-          if (d >= todayStart) { sToday += amount; pToday += profit; }
-          if (d >= weekStart) { sWeek += amount; pWeek += profit; }
-          if (d >= monthStart) { sMonth += amount; pMonth += profit; }
-      });
-
-      return { salesToday: sToday, salesThisWeek: sWeek, salesThisMonth: sMonth, profitToday: pToday, profitThisWeek: pWeek, profitThisMonth: pMonth };
-  }, [orders, products]);
+  const { salesToday, salesThisWeek, salesThisMonth, profitToday, profitThisWeek, profitThisMonth } = quickStats;
 
 
   return (

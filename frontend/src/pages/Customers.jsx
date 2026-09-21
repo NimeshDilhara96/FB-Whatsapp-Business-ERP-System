@@ -11,6 +11,7 @@ import Select from "../components/ui/Select";
 import Button from "../components/ui/Button";
 import Alert from "../components/ui/Alert";
 import CustomerSidePanel from "../components/customers/CustomerSidePanel";
+import Pagination from "../components/ui/Pagination";
 
 const cities = [
   "Colombo",
@@ -38,15 +39,24 @@ const Customers = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({});
 
   useEffect(() => {
-    fetchCustomers();
+    fetchCustomers(1);
   }, []);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = async (currentPage = page) => {
     try {
-      const data = await getCustomers();
-      setCustomers(data);
+      const response = await getCustomers(currentPage);
+      const payload = response.data || response;
+      
+      if (payload && Array.isArray(payload.data)) {
+        setCustomers(payload.data);
+        if (payload.pagination) setPagination(payload.pagination);
+      } else if (Array.isArray(payload)) {
+        setCustomers(payload);
+      }
     } catch (error) {
       console.error("Failed to fetch customers:", error);
     }
@@ -85,7 +95,7 @@ const Customers = () => {
           notes: "",
         });
         setEditingId(null);
-        fetchCustomers();
+        fetchCustomers(page);
       }
     } catch (error) {
       setError(error.response?.data?.message || "Error saving customer");
@@ -123,7 +133,7 @@ const Customers = () => {
     if (window.confirm("Are you sure you want to delete this customer?")) {
       try {
         await deleteCustomer(id);
-        fetchCustomers();
+        fetchCustomers(page);
       } catch (error) {
         alert("Failed to delete customer");
       }
@@ -290,6 +300,13 @@ const Customers = () => {
             </tbody>
           </table>
         </div>
+        <Pagination 
+          pagination={pagination} 
+          onPageChange={(newPage) => {
+            setPage(newPage);
+            fetchCustomers(newPage);
+          }} 
+        />
       </Card>
     </DashboardLayout>
   );

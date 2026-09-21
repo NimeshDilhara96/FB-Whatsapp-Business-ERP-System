@@ -1,7 +1,7 @@
 import api from "../api/api";
 
-export const getProducts = () => {
-  return api.get("/products");
+export const getProducts = (page = 1, limit = 50) => {
+  return api.get(`/products?page=${page}&limit=${limit}`);
 };
 
 export const createProduct = (data) => {

@@ -34,4 +34,7 @@ const customerSchema = new mongoose.Schema(
 // 🔥 validation one business same whatsapp not allow
 customerSchema.index({ tenantId: 1, whatsappNumber: 1 }, { unique: true });
 
+// Index for efficiently fetching/filtering a tenant's customers by date (Analytics)
+customerSchema.index({ tenantId: 1, createdAt: -1 });
+
 export default mongoose.model("Customer", customerSchema);
