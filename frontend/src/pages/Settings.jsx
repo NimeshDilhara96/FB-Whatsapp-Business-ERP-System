@@ -8,6 +8,11 @@ import Alert from "../components/ui/Alert";
 
 const changelogData = [
   {
+    version: "v1.0.5",
+    date: "September 22, 2026",
+    changes: ["Performance optimization", "Security optimization"],
+  },
+  {
     version: "v1.0.4",
     date: "August 08, 2026",
     changes: [
@@ -121,7 +126,9 @@ export default function Settings() {
                 Coming Soon! 🚀
               </p>
               <p className="text-xs text-primary-700 mt-1">
-                We are actively building the public storefront feature. Soon you'll be able to share a unique link with your customers to let them view your products directly!
+                We are actively building the public storefront feature. Soon
+                you'll be able to share a unique link with your customers to let
+                them view your products directly!
               </p>
             </div>
 
@@ -166,8 +173,8 @@ export default function Settings() {
                       Pro Feature
                     </p>
                     <p className="text-xs text-warning-700 mt-1">
-                      Upgrade your workspace to the Pro plan to unlock your unique
-                      public storefront.
+                      Upgrade your workspace to the Pro plan to unlock your
+                      unique public storefront.
                     </p>
                   </div>
                   <Button variant="primary" className="whitespace-nowrap">
