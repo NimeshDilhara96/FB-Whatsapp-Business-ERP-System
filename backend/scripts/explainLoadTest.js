@@ -12,7 +12,8 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 async function runExplain() {
   await mongoose.connect(process.env.MONGO_URI);
   
-  const user = await User.findOne({ email: "loadtest@erp.com" });
+  const email = process.env.TEST_USER_EMAIL || "loadtest@erp.com";
+  const user = await User.findOne({ email });
   if (!user) {
     console.log("Loadtest user not found");
     process.exit(1);

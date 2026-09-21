@@ -7,7 +7,7 @@ import Order from "../src/models/Order.js";
 
 dotenv.config();
 
-const LOAD_TEST_EMAIL = "loadtest@erp.com";
+const LOAD_TEST_EMAIL = process.env.TEST_USER_EMAIL || "loadtest@erp.com";
 
 async function connectDB() {
   try {

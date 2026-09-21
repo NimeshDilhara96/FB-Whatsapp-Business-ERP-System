@@ -11,15 +11,15 @@ const API_BASE = "http://localhost:5000/api";
 const TENANT_A = {
   companyName: "TxTest Tenant A",
   name: "Alice",
-  email: "alice@txtest.com",
-  password: "Password123!",
+  email: process.env.TEST_USER_A_EMAIL || "alice@txtest.com",
+  password: process.env.TEST_USER_A_PASSWORD || "Password123!",
 };
 
 const TENANT_B = {
   companyName: "TxTest Tenant B",
   name: "Bob",
-  email: "bob@txtest.com",
-  password: "Password123!",
+  email: process.env.TEST_USER_B_EMAIL || "bob@txtest.com",
+  password: process.env.TEST_USER_B_PASSWORD || "Password123!",
 };
 
 async function getAuthCookies(user) {

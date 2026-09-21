@@ -1,11 +1,18 @@
 import autocannon from "autocannon";
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const API_BASE = "http://localhost:5000/api";
 const LOAD_TEST_USER = {
   companyName: "LoadTest ERP",
   name: "Load Tester",
-  email: "loadtest@erp.com",
-  password: "LoadTest123!",
+  email: process.env.TEST_USER_EMAIL || "loadtest@erp.com",
+  password: process.env.TEST_USER_PASSWORD || "LoadTest123!",
 };
 
 async function getAuthCookie() {

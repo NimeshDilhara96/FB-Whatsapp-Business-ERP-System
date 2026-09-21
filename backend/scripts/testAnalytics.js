@@ -7,8 +7,8 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const API_URL = 'http://localhost:5000/api';
-const EMAIL = 'loadtest@erp.com';
-const PASSWORD = 'LoadTest123!';
+const EMAIL = process.env.TEST_USER_EMAIL || 'loadtest@erp.com';
+const PASSWORD = process.env.TEST_USER_PASSWORD || 'LoadTest123!';
 
 async function runTests() {
   try {
