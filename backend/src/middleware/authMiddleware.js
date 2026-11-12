@@ -15,8 +15,8 @@ export const authMiddleware = async (req, res, next) => {
       // 2. Cryptographically verify the token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // 3. Find the user and attach them to the request context (excluding password)
-      req.user = await User.findById(decoded.id).select("-password");
+      // 3. Find the user and attach them to the request context (excluding password and refreshToken)
+      req.user = await User.findById(decoded.id).select("-password -refreshToken");
 
       if (!req.user) {
         return res.status(401).json({ message: "Not authorized, user no longer exists" });

@@ -7,6 +7,9 @@ const api = axios.create({
     ? import.meta.env.VITE_API_URL_LOCAL 
     : import.meta.env.VITE_API_URL_PROD,
   withCredentials: true, // IMPORTANT: Allows sending/receiving cookies
+  headers: {
+    "X-Requested-With": "XMLHttpRequest",
+  },
 });
 
 // Axios Interceptor to automatically attach headers to EVERY request

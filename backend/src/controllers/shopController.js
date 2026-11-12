@@ -3,7 +3,7 @@ import Product from "../models/Product.js";
 
 export const getShopDetails = async (req, res) => {
   try {
-    const { shopSlug } = req.params;
+    const { shopSlug } = req.validatedParams || req.params;
 
     // Find the tenant by shopSlug
     const tenant = await Tenant.findOne({ shopSlug });
@@ -17,8 +17,16 @@ export const getShopDetails = async (req, res) => {
       return res.status(403).json({ message: "Storefront feature is only available on the Pro plan." });
     }
 
-    // Check if the tenant's subscription is active
-    if (tenant.subscription && tenant.subscription.status !== "Active") {
+    // Check if the tenant's subscription is active and not expired
+    const isExpired =
+      tenant.subscription?.expiresAt &&
+      new Date(tenant.subscription.expiresAt) < new Date();
+
+    if (
+      !tenant.subscription ||
+      tenant.subscription.status !== "Active" ||
+      isExpired
+    ) {
       return res.status(403).json({ message: "Shop is currently unavailable" });
     }
 

@@ -3,7 +3,7 @@ import Customer from "../models/Customer.js";
 // create customer
 export const createCustomer = async (req, res) => {
   try {
-    const { whatsappNumber } = req.body;
+    const { name, whatsappNumber, address, city, notes } = req.body;
     const tenantId = req.user.tenantId; // Middleware id
 
     // check same number already exists in same business
@@ -19,7 +19,11 @@ export const createCustomer = async (req, res) => {
 
     //create customer
     const newCustomer = await Customer.create({
-      ...req.body,
+      name,
+      whatsappNumber,
+      address,
+      city,
+      notes,
       tenantId: tenantId,
     });
 
@@ -36,8 +40,7 @@ export const createCustomer = async (req, res) => {
 export const getCustomers = async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const { page = 1, limit = 50 } = req.validatedQuery || {};
     const skip = (page - 1) * limit;
 
     const [totalItems, customers] = await Promise.all([
@@ -66,14 +69,22 @@ export const getCustomers = async (req, res) => {
 // 3. Customer details (Update)
 export const updateCustomer = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.validatedParams || req.params;
     const tenantId = req.user.tenantId;
+    const { name, whatsappNumber, address, city, notes } = req.body;
+
+    const updateFields = {};
+    if (name !== undefined) updateFields.name = name;
+    if (whatsappNumber !== undefined) updateFields.whatsappNumber = whatsappNumber;
+    if (address !== undefined) updateFields.address = address;
+    if (city !== undefined) updateFields.city = city;
+    if (notes !== undefined) updateFields.notes = notes;
 
     // check user in my business (tenantId)
     const updatedCustomer = await Customer.findOneAndUpdate(
       { _id: id, tenantId: tenantId },
-      { $set: req.body }, // add new details
-      { returnDocument: 'after' }, // return updated details
+      { $set: updateFields }, // add new details
+      { returnDocument: 'after', runValidators: true }, // return updated details
     );
 
     if (!updatedCustomer) {
@@ -95,7 +106,7 @@ export const updateCustomer = async (req, res) => {
 // 4. delete customer
 export const deleteCustomer = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.validatedParams || req.params;
     const tenantId = req.user.tenantId;
 
     // check user in my business

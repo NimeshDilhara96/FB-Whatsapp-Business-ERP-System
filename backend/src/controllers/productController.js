@@ -4,9 +4,14 @@ import Product from "../models/Product.js";
 export const createProduct = async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
+    const { name, description, price, costPrice, stockQuantity } = req.body;
 
     const newProduct = new Product({
-      ...req.body,
+      name,
+      description,
+      price,
+      costPrice,
+      stockQuantity,
       tenantId: tenantId,
     });
 
@@ -26,8 +31,7 @@ export const createProduct = async (req, res) => {
 export const getProducts = async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const { page = 1, limit = 50 } = req.validatedQuery || {};
     const skip = (page - 1) * limit;
 
     // Run count and find concurrently for performance
@@ -55,14 +59,22 @@ export const getProducts = async (req, res) => {
 };
 export const updateProduct = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.validatedParams || req.params;
     const tenantId = req.user.tenantId;
+    const { name, description, price, costPrice, stockQuantity } = req.body;
+
+    const updateFields = {};
+    if (name !== undefined) updateFields.name = name;
+    if (description !== undefined) updateFields.description = description;
+    if (price !== undefined) updateFields.price = price;
+    if (costPrice !== undefined) updateFields.costPrice = costPrice;
+    if (stockQuantity !== undefined) updateFields.stockQuantity = stockQuantity;
 
     // Find and update the product only if it belongs to the logged-in user
     const updatedProduct = await Product.findOneAndUpdate(
       { _id: id, tenantId: tenantId },
-      { $set: req.body },
-      { returnDocument: 'after' }, // Return the updated product
+      { $set: updateFields },
+      { returnDocument: 'after', runValidators: true }, // Return the updated product
     );
 
     if (!updatedProduct) {
@@ -84,7 +96,7 @@ export const updateProduct = async (req, res) => {
 // 4. Delete a product
 export const deleteProduct = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.validatedParams || req.params;
     const tenantId = req.user.tenantId;
 
     // Find and delete the product only if it belongs to the logged-in user

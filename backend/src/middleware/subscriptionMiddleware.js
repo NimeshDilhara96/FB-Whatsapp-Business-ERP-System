@@ -19,15 +19,33 @@ export const subscriptionMiddleware = async (req, res, next) => {
       return next();
     }
 
-    if (subscription.status !== "Active") {
-      return res.status(403).json({ 
-        message: `Your subscription is not active (Status: ${subscription.status}). Please contact support.` 
+    if (subscription.status === "Suspended") {
+      return res.status(403).json({
+        message:
+          "Your subscription is suspended. Please contact support.",
       });
     }
 
-    if (subscription.expiresAt && new Date(subscription.expiresAt) < new Date()) {
-      return res.status(403).json({ 
-        message: "Your subscription has expired. Please renew to continue using the system." 
+    const isExpired =
+      subscription.status === "Expired" ||
+      (subscription.expiresAt &&
+        new Date(subscription.expiresAt) < new Date());
+
+    if (isExpired) {
+      // Allow Read-Only access (GET/HEAD/OPTIONS) for expired tenants
+      if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+        req.subscription = subscription;
+        return next();
+      }
+      return res.status(403).json({
+        message:
+          "Your subscription has expired. Account is in Read-Only mode. Please renew to continue making changes.",
+      });
+    }
+
+    if (subscription.status !== "Active") {
+      return res.status(403).json({
+        message: `Your subscription is not active (Status: ${subscription.status}). Please contact support.`,
       });
     }
 

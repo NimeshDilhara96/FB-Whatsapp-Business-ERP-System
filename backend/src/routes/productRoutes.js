@@ -1,10 +1,18 @@
 import express from "express";
 
-import { validate } from "../middleware/validate.js";
+import {
+  validate,
+  validateQuery,
+  validateParams,
+} from "../middleware/validate.js";
 import {
   createProductSchema,
   updateProductSchema,
 } from "../validators/productValidator.js";
+import {
+  paginationQuerySchema,
+  idParamSchema,
+} from "../validators/commonValidator.js";
 import {
   createProduct,
   getProducts,
@@ -18,16 +26,17 @@ const router = express.Router();
 router.post("/", validate(createProductSchema), createProduct);
 
 // 2. Get all products
-router.get("/", getProducts);
+router.get("/", validateQuery(paginationQuerySchema), getProducts);
 
 // 3. Update a product
 router.put(
   "/:id",
+  validateParams(idParamSchema),
   validate(updateProductSchema),
   updateProduct,
 );
 
 // 4. Delete a product
-router.delete("/:id", deleteProduct);
+router.delete("/:id", validateParams(idParamSchema), deleteProduct);
 
 export default router;

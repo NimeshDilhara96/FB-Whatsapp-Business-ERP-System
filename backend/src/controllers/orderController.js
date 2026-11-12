@@ -140,8 +140,7 @@ export const createOrder = async (req, res) => {
 export const getOrders = async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const { page = 1, limit = 50 } = req.validatedQuery || {};
     const skip = (page - 1) * limit;
 
     const [totalItems, orders] = await Promise.all([
@@ -171,7 +170,7 @@ export const getOrders = async (req, res) => {
 
 export const getCustomerOrders = async (req, res) => {
   try {
-    const { customerId } = req.params;
+    const { customerId } = req.validatedParams || req.params;
     const tenantId = req.user.tenantId;
 
     const orders = await Order.find({ customerId, tenantId })
@@ -188,20 +187,44 @@ export const getCustomerOrders = async (req, res) => {
 
 // Order Details Update Function
 export const updateOrderDetails = async (req, res) => {
+  let session = null;
+  if (hasTransactionSupport) {
+    session = await mongoose.startSession();
+    session.startTransaction();
+  }
+
+  const sessionOpt = session ? { session } : {};
+
+  const cleanupSession = async () => {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+      session = null;
+    }
+  };
+
   try {
-    const { id } = req.params;
+    const { id } = req.validatedParams || req.params;
     const { orderStatus, paymentStatus } = req.body;
 
     // 1. Fetch the existing order first
     const tenantId = req.user?.tenantId || req.tenantId;
-    const existingOrder = await Order.findOne({ _id: id, tenantId });
+    const existingOrder = await Order.findOne(
+      { _id: id, tenantId },
+      null,
+      sessionOpt,
+    );
 
     if (!existingOrder) {
+      await cleanupSession();
       return res.status(404).json({ message: "Order not found" });
     }
 
+    const prevStatus = existingOrder.orderStatus;
+    const updateFields = {};
+
     // 2. State Machine Logic (Only if orderStatus is provided)
-    if (orderStatus && existingOrder.orderStatus !== orderStatus) {
+    if (orderStatus && prevStatus !== orderStatus) {
       const validTransitions = {
         Pending: ["Processing", "Shipped", "Cancelled"],
         Processing: ["Shipped", "Cancelled"],
@@ -212,50 +235,87 @@ export const updateOrderDetails = async (req, res) => {
         Returned: [],
       };
 
-      if (!validTransitions[existingOrder.orderStatus]?.includes(orderStatus)) {
+      if (!validTransitions[prevStatus]?.includes(orderStatus)) {
+        await cleanupSession();
         return res.status(400).json({
-          message: `Invalid status transition from ${existingOrder.orderStatus} to ${orderStatus}.`,
+          message: `Invalid status transition from ${prevStatus} to ${orderStatus}.`,
         });
       }
 
       // Ensure order is Paid before it can be Completed
       if (orderStatus === "Completed") {
-        const currentPaymentStatus = paymentStatus || existingOrder.paymentStatus;
+        const currentPaymentStatus =
+          paymentStatus || existingOrder.paymentStatus;
         if (currentPaymentStatus !== "Paid") {
+          await cleanupSession();
           return res.status(400).json({
             message: "Cannot mark order as Completed until it is Paid.",
           });
         }
       }
 
-      // 3. Inventory Restoration: If moving to Cancelled or Returned
-      if (orderStatus === "Cancelled" || orderStatus === "Returned") {
-        for (const item of existingOrder.items) {
-          if (item.productName && item.quantity) {
-            await Product.findOneAndUpdate(
-              { name: item.productName, tenantId },
-              { $inc: { stockQuantity: item.quantity } },
-            );
-          }
-        }
-      }
-
-      existingOrder.orderStatus = orderStatus;
+      updateFields.orderStatus = orderStatus;
     }
 
     // Handle paymentStatus update
     if (paymentStatus && existingOrder.paymentStatus !== paymentStatus) {
       if (!["Pending", "Paid"].includes(paymentStatus)) {
+        await cleanupSession();
         return res.status(400).json({ message: "Invalid payment status" });
       }
-      existingOrder.paymentStatus = paymentStatus;
+      updateFields.paymentStatus = paymentStatus;
     }
 
-    // 4. Apply the update
-    const updatedOrder = await existingOrder.save();
+    if (Object.keys(updateFields).length === 0) {
+      await cleanupSession();
+      return res.status(200).json(existingOrder);
+    }
+
+    // 3. Apply the order update with an atomic precondition on orderStatus: prevStatus
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id: id, tenantId, orderStatus: prevStatus },
+      { $set: updateFields },
+      { returnDocument: "after", runValidators: true, ...sessionOpt },
+    );
+
+    if (!updatedOrder) {
+      await cleanupSession();
+      return res.status(409).json({
+        message:
+          "Order status was modified by another request. Please refresh and try again.",
+      });
+    }
+
+    // 4. Inventory Restoration: If moving to Cancelled or Returned
+    if (
+      orderStatus &&
+      prevStatus !== orderStatus &&
+      (orderStatus === "Cancelled" || orderStatus === "Returned")
+    ) {
+      for (const item of existingOrder.items) {
+        if (item.quantity && (item.productId || item.productName)) {
+          const productFilter = item.productId
+            ? { _id: item.productId, tenantId }
+            : { name: item.productName, tenantId };
+
+          await Product.findOneAndUpdate(
+            productFilter,
+            { $inc: { stockQuantity: item.quantity } },
+            sessionOpt,
+          );
+        }
+      }
+    }
+
+    if (session) {
+      await session.commitTransaction();
+      session.endSession();
+      session = null;
+    }
 
     res.status(200).json(updatedOrder);
   } catch (error) {
+    await cleanupSession();
     res
       .status(500)
       .json({ message: "Error updating order status", error: error.message });

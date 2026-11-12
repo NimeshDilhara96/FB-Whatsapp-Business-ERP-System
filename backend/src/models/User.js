@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      select: false,
     },
     role: {
       type: String,
@@ -25,7 +26,8 @@ const userSchema = new mongoose.Schema(
       index: true,
     },
     refreshToken: {
-      type: String, // Store refresh token here for revocation
+      type: String, // Store hashed refresh token here for revocation
+      select: false,
     },
   },
   { timestamps: true }

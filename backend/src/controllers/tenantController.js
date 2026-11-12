@@ -11,7 +11,7 @@ export const updateCurrency = async (req, res) => {
     const tenant = await Tenant.findOneAndUpdate(
       { tenantId: req.tenantId },
       { currency },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!tenant) {

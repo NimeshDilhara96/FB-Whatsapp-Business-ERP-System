@@ -4,6 +4,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
+// Helper to hash refresh tokens with SHA-256 before storing/comparing in MongoDB
+const hashToken = (token) =>
+  crypto.createHash("sha256").update(token).digest("hex");
+
 // Helper to generate tokens
 const generateTokens = (user) => {
   const accessToken = jwt.sign(
@@ -25,7 +29,7 @@ const setRefreshTokenCookie = (res, refreshToken) => {
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Must be 'none' for cross-domain
+    sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
@@ -34,7 +38,7 @@ const setAccessTokenCookie = (res, accessToken) => {
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    sameSite: "lax",
     maxAge: 15 * 60 * 1000, // 15 minutes
   });
 };
@@ -97,8 +101,8 @@ export const registerTenant = async (req, res) => {
     // 6. Generate the JWTs
     const { accessToken, refreshToken } = generateTokens(user);
 
-    // 7. Save refresh token to user
-    user.refreshToken = refreshToken;
+    // 7. Save hashed refresh token to user
+    user.refreshToken = hashToken(refreshToken);
     await user.save();
 
     // 8. Set HttpOnly cookies
@@ -130,7 +134,7 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     // We can confidently locate them by their unique email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -141,19 +145,28 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    // Fetch the tenant to verify workspace status and get company details
+    const tenant = await Tenant.findOne({ tenantId: user.tenantId });
+
+    if (
+      user.role !== "superadmin" &&
+      tenant?.subscription?.status === "Suspended"
+    ) {
+      return res.status(403).json({
+        message: "Your workspace has been suspended. Please contact support.",
+      });
+    }
+
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user);
 
-    // Save refresh token to DB
-    user.refreshToken = refreshToken;
+    // Save hashed refresh token to DB
+    user.refreshToken = hashToken(refreshToken);
     await user.save();
 
     // Set cookies
     setRefreshTokenCookie(res, refreshToken);
     setAccessTokenCookie(res, accessToken);
-
-    // Fetch the tenant to get the company name
-    const tenant = await Tenant.findOne({ tenantId: user.tenantId });
 
     res.json({
       message: "Login successful",
@@ -186,18 +199,43 @@ export const refreshTokenController = async (req, res) => {
     // Verify refresh token
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
-    // Find user with matching refresh token
-    const user = await User.findOne({ _id: decoded.id, refreshToken });
+    // Find user with matching hashed refresh token
+    const hashedRefreshToken = hashToken(refreshToken);
+    const user = await User.findOne({
+      _id: decoded.id,
+      refreshToken: hashedRefreshToken,
+    });
 
     if (!user) {
       return res.status(403).json({ message: "Invalid refresh token" });
     }
 
+    if (user.role !== "superadmin") {
+      const tenant = await Tenant.findOne({ tenantId: user.tenantId });
+      if (!tenant || tenant.subscription?.status === "Suspended") {
+        user.refreshToken = null;
+        await user.save();
+        res.clearCookie("refreshToken", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        });
+        res.clearCookie("accessToken", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        });
+        return res.status(403).json({
+          message: "Your workspace has been suspended. Please contact support.",
+        });
+      }
+    }
+
     // Generate new tokens
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
 
-    // Update refresh token in DB
-    user.refreshToken = newRefreshToken;
+    // Update hashed refresh token in DB
+    user.refreshToken = hashToken(newRefreshToken);
     await user.save();
 
     // Set new cookies
@@ -216,7 +254,8 @@ export const logout = async (req, res) => {
     const { refreshToken } = req.cookies;
 
     if (refreshToken) {
-      const user = await User.findOne({ refreshToken });
+      const hashedRefreshToken = hashToken(refreshToken);
+      const user = await User.findOne({ refreshToken: hashedRefreshToken });
       if (user) {
         user.refreshToken = null;
         await user.save();
@@ -226,12 +265,12 @@ export const logout = async (req, res) => {
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: "lax",
     });
     res.clearCookie("accessToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: "lax",
     });
 
     res.json({ message: "Logged out successfully" });
@@ -248,6 +287,15 @@ export const getMe = async (req, res) => {
 
     if (!tenant) {
       return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    if (
+      user.role !== "superadmin" &&
+      tenant.subscription?.status === "Suspended"
+    ) {
+      return res.status(403).json({
+        message: "Your workspace has been suspended. Please contact support.",
+      });
     }
 
     res.json({

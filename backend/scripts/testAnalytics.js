@@ -15,7 +15,10 @@ async function runTests() {
     console.log('1. Logging in as LoadTest tenant...');
     const loginRes = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
       body: JSON.stringify({ email: EMAIL, password: PASSWORD })
     });
     const cookieHeader = loginRes.headers.get('set-cookie');

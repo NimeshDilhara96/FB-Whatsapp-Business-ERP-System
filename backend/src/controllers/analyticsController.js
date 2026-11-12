@@ -1,12 +1,25 @@
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import Customer from "../models/Customer.js";
+import {
+  dashboardQuerySchema,
+  reportQuerySchema,
+} from "../validators/analyticsValidator.js";
 
 export const getDashboardStats = async (req, res) => {
   try {
     const startOverall = performance.now();
     const tenantId = req.user.tenantId;
-    const { dateFilter = '7' } = req.query;
+    const parsedQuery = req.validatedQuery
+      ? { success: true, data: req.validatedQuery }
+      : dashboardQuerySchema.safeParse(req.query);
+    if (!parsedQuery.success) {
+      return res.status(400).json({
+        message: "Validation Error",
+        errors: parsedQuery.error.issues.map((e) => e.message),
+      });
+    }
+    const { dateFilter } = parsedQuery.data;
 
     const now = new Date();
     const filterDate = new Date();
@@ -146,7 +159,7 @@ export const getDashboardStats = async (req, res) => {
     // Fill in missing days
     let chartData = [];
     if (dateFilter !== 'all') {
-      const days = parseInt(dateFilter);
+      const days = dateFilter === '30' ? 30 : 7;
       for (let i = days - 1; i >= 0; i--) {
         const d = new Date(now);
         d.setDate(now.getDate() - i);
@@ -202,7 +215,16 @@ export const getReportStats = async (req, res) => {
   try {
     const startOverall = performance.now();
     const tenantId = req.user.tenantId;
-    const { timeframe = 'all' } = req.query;
+    const parsedQuery = req.validatedQuery
+      ? { success: true, data: req.validatedQuery }
+      : reportQuerySchema.safeParse(req.query);
+    if (!parsedQuery.success) {
+      return res.status(400).json({
+        message: "Validation Error",
+        errors: parsedQuery.error.issues.map((e) => e.message),
+      });
+    }
+    const { timeframe } = parsedQuery.data;
 
     const now = new Date();
     const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);

@@ -20,7 +20,10 @@ async function getAuthCookie() {
   
   let res = await fetch(`${API_BASE}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
     body: JSON.stringify({ email: LOAD_TEST_USER.email, password: LOAD_TEST_USER.password }),
   });
 
@@ -29,7 +32,10 @@ async function getAuthCookie() {
     console.log("Account not found. Registering dedicated load-test account...");
     res = await fetch(`${API_BASE}/auth/register`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
       body: JSON.stringify(LOAD_TEST_USER),
     });
 

@@ -40,7 +40,8 @@ export const getAllTenants = async (req, res) => {
 export const updateTenantStatus = async (req, res) => {
   try {
     const { status } = req.body; // e.g., "Active", "Suspended"
-    const tenant = await Tenant.findById(req.params.id);
+    const { id } = req.validatedParams || req.params;
+    const tenant = await Tenant.findById(id);
 
     if (!tenant) {
       return res.status(404).json({ message: "Tenant not found" });
@@ -52,6 +53,13 @@ export const updateTenantStatus = async (req, res) => {
 
     tenant.subscription.status = status;
     await tenant.save();
+
+    if (status === "Suspended") {
+      await User.updateMany(
+        { tenantId: tenant.tenantId },
+        { $set: { refreshToken: null } },
+      );
+    }
 
     res.json(tenant);
   } catch (error) {
@@ -65,7 +73,9 @@ export const updateTenantStatus = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     // Select essential fields, populate tenant details if needed
-    const users = await User.find().select("-password").sort({ createdAt: -1 });
+    const users = await User.find()
+      .select("name email role tenantId createdAt")
+      .sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Error fetching users", error: error.message });

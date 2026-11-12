@@ -34,19 +34,44 @@ const app = express();
 
 app.use(helmet());
 app.use(requestLogger);
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "https://orderflow.mommentx.space",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: [
-      process.env.FRONTEND_URL,
-      "https://orderflow.mommentx.space",
-      "http://localhost:5173",
-    ].filter(Boolean),
+    origin: allowedOrigins,
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   }),
 );
 app.use(express.json({ limit: "10kb" })); // Limit body payload to prevent DoS
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
+
+// CSRF Protection for state-changing requests
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+app.use("/api", (req, res, next) => {
+  if (!MUTATING_METHODS.has(req.method)) {
+    return next();
+  }
+
+  const origin = req.headers.origin;
+  if (origin && !allowedOrigins.includes(origin)) {
+    return res.status(403).json({ message: "Forbidden: Untrusted Origin" });
+  }
+
+  const requestedWith = req.headers["x-requested-with"];
+  if (requestedWith !== "XMLHttpRequest") {
+    return res
+      .status(403)
+      .json({ message: "Forbidden: Missing required X-Requested-With header" });
+  }
+
+  next();
+});
 
 // 1. Data Sanitization against NoSQL query injection
 import mongoSanitize from "express-mongo-sanitize";
@@ -54,7 +79,20 @@ import mongoSanitize from "express-mongo-sanitize";
 app.use((req, res, next) => {
   if (req.body) mongoSanitize.sanitize(req.body, { replaceWith: "_" });
   if (req.params) mongoSanitize.sanitize(req.params, { replaceWith: "_" });
-  if (req.query) mongoSanitize.sanitize(req.query, { replaceWith: "_" });
+  if (req.query) {
+    // Express 5 defines req.query as a getter returning a new object on every access;
+    // redefine it on the request instance so sanitization persists.
+    const sanitizedQuery = mongoSanitize.sanitize(
+      { ...req.query },
+      { replaceWith: "_" },
+    );
+    Object.defineProperty(req, "query", {
+      value: sanitizedQuery,
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    });
+  }
   next();
 });
 
@@ -103,7 +141,7 @@ app.use("/api/products", subscriptionMiddleware, productRoutes);
 // Note: Uncomment these routes once you create the route files
 app.use("/api/orders", subscriptionMiddleware, orderRoutes);
 app.use("/api/customers", subscriptionMiddleware, customerRoutes);
-app.use("/api/tenant", tenantRoutes);
+app.use("/api/tenant", subscriptionMiddleware, tenantRoutes);
 app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/analytics", subscriptionMiddleware, analyticsRoutes);
 
