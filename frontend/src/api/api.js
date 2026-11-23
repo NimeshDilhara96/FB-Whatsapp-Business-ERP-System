@@ -27,12 +27,13 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If 401 error, and it's NOT a retry, and it's NOT the login or refresh endpoints itself
+    // If 401 error, and it's NOT a retry, and it's NOT the login, logout, or refresh endpoints itself
     if (
       error.response?.status === 401 && 
       !originalRequest._retry &&
       !originalRequest.url.includes("/auth/refresh") &&
-      !originalRequest.url.includes("/auth/login")
+      !originalRequest.url.includes("/auth/login") &&
+      !originalRequest.url.includes("/auth/logout")
     ) {
       originalRequest._retry = true;
 
@@ -46,8 +47,8 @@ api.interceptors.response.use(
         // Retry original request (cookies will be automatically attached)
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails (e.g., refresh token expired), log out the user
-        useAuthStore.getState().logout();
+        // If refresh fails (e.g., refresh token expired), clear local session state
+        useAuthStore.getState().clearSession();
         return Promise.reject(refreshError);
       }
     }

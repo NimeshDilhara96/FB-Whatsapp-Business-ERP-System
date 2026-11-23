@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { registerUser } from "../services/authService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Input from "../components/ui/Input";
 import Alert from "../components/ui/Alert";
 import orderflowLogo from "../assets/orderflow_logo_transparent.png";
@@ -157,9 +157,9 @@ export default function Register() {
                     {/* Login Link */}
                     <p className="mt-6 text-sm text-slate-500">
                         Already have a workspace?{" "}
-                        <a href="/login" className="font-semibold text-slate-900 hover:underline">
+                        <Link to="/login" className="font-semibold text-slate-900 hover:underline">
                             Sign in
-                        </a>
+                        </Link>
                     </p>
 
                     <p className="mt-12 border-t border-slate-200 pt-5 text-xs text-slate-400">

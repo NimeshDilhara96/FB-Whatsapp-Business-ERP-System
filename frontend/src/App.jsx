@@ -22,21 +22,28 @@ import ManageUsers from "./admin/pages/ManageUsers";
 
 export default function App() {
   const login = useAuthStore((state) => state.login);
+  const clearSession = useAuthStore((state) => state.clearSession);
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     const initAuth = async () => {
+      if (localStorage.getItem("orderflow_has_session") !== "true") {
+        setIsInitializing(false);
+        return;
+      }
+
       try {
         const res = await getCurrentUser();
         login(res.data.user);
-      } catch (error) {
-        // Not authenticated, that's fine. ProtectedRoute will redirect.
+      } catch {
+        // Session expired or invalid; clear session flag so ProtectedRoute redirects cleanly
+        clearSession();
       } finally {
         setIsInitializing(false);
       }
     };
     initAuth();
-  }, [login]);
+  }, [login, clearSession]);
 
   if (isInitializing) {
     return (

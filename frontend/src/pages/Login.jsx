@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { loginUser } from "../services/authService";
 import { useAuthStore } from "../store/authStore";
 import Input from "../components/ui/Input";
@@ -249,12 +249,12 @@ export default function Login() {
             {/* Register Link */}
             <p className="mt-6 text-sm text-slate-500">
               Don&apos;t have a workspace?{" "}
-              <a
-                href="/register"
+              <Link
+                to="/register"
                 className="font-semibold text-slate-900 hover:underline"
               >
                 Create one
-              </a>
+              </Link>
             </p>
 
             <p className="mt-12 border-t border-slate-200 pt-5 text-xs text-slate-400">
