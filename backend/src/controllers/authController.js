@@ -60,20 +60,36 @@ const generateTokens = (user) => {
   return { accessToken, refreshToken };
 };
 
+// Cookie options are resolved lazily (after dotenv has loaded).
+// Production default is SameSite=None because the frontend and the API live on different
+// sites (e.g. orderflow.mommentx.space -> onrender.com). CSRF is covered by the Origin
+// allowlist + X-Requested-With check in server.js.
+// Once the API is served from a sibling subdomain (api.mommentx.space), set
+// COOKIE_SAMESITE=lax (and optionally COOKIE_DOMAIN=.mommentx.space) on the backend.
+const getCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === "production";
+  const sameSite = process.env.COOKIE_SAMESITE || (isProduction ? "none" : "lax");
+  const options = {
+    httpOnly: true,
+    secure: isProduction || sameSite === "none",
+    sameSite,
+  };
+  if (process.env.COOKIE_DOMAIN) {
+    options.domain = process.env.COOKIE_DOMAIN;
+  }
+  return options;
+};
+
 const setRefreshTokenCookie = (res, refreshToken) => {
   res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    ...getCookieOptions(),
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
 
 const setAccessTokenCookie = (res, accessToken) => {
   res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    ...getCookieOptions(),
     maxAge: 15 * 60 * 1000, // 15 minutes
   });
 };
@@ -257,16 +273,8 @@ export const refreshTokenController = async (req, res) => {
       if (!tenant || tenant.subscription?.status === "Suspended") {
         user.refreshToken = null;
         await user.save();
-        res.clearCookie("refreshToken", {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-        });
-        res.clearCookie("accessToken", {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-        });
+        res.clearCookie("refreshToken", getCookieOptions());
+        res.clearCookie("accessToken", getCookieOptions());
         return res.status(403).json({
           message: "Your workspace has been suspended. Please contact support.",
         });
@@ -304,16 +312,8 @@ export const logout = async (req, res) => {
       }
     }
 
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    });
-    res.clearCookie("accessToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    });
+    res.clearCookie("refreshToken", getCookieOptions());
+    res.clearCookie("accessToken", getCookieOptions());
 
     res.json({ message: "Logged out successfully" });
   } catch (error) {
