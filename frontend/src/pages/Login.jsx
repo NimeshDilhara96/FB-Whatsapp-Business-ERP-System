@@ -2,9 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/authService";
 import { useAuthStore } from "../store/authStore";
-import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
-import Card from "../components/ui/Card";
 import Alert from "../components/ui/Alert";
 import orderflowLogo from "../assets/orderflow_logo_transparent.png";
 import TurnstileWidget from "../components/ui/TurnstileWidget";
@@ -68,6 +66,21 @@ export default function Login() {
     await submitLogin(turnstileToken);
   };
 
+  const features = [
+    {
+      title: "Isolated workspaces",
+      text: "Every business operates in its own secure, separate tenant.",
+    },
+    {
+      title: "Orders and inventory",
+      text: "Stock is updated transactionally with every order placed.",
+    },
+    {
+      title: "Profit reporting",
+      text: "Revenue, cost and margin reports for any period.",
+    },
+  ];
+
   return (
     <>
       {/* ── Server Cold-Start Loading Overlay ── */}
@@ -84,7 +97,7 @@ export default function Login() {
             <circle cx="18" cy="18" r="15" stroke="#e4e4e7" strokeWidth="3" />
             <path
               d="M18 3 A15 15 0 0 1 33 18"
-              stroke="#6366f1"
+              stroke="#059669"
               strokeWidth="3"
               strokeLinecap="round"
             />
@@ -98,11 +111,8 @@ export default function Login() {
             <p className="text-sm text-slate-500 mb-5 leading-relaxed">
               This demo runs on a free-tier service which requires a brief cold start. Please allow <span className="font-medium text-slate-700">10–30 seconds</span>.
             </p>
-            <div className="bg-indigo-50/70 border border-indigo-100 rounded-lg px-3 py-2 w-full">
-              <p className="text-xs text-indigo-700 font-medium flex items-center justify-center gap-1.5">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+            <div className="border border-slate-200 rounded-md px-3 py-2 w-full">
+              <p className="text-xs text-slate-600 font-medium text-center">
                 Production performance will be instant
               </p>
             </div>
@@ -115,82 +125,71 @@ export default function Login() {
         </div>
       )}
 
-      <div className="min-h-screen bg-linear-to-br from-base-bg to-primary-50 flex flex-col items-center justify-center p-4 md:relative">
-        {/* Top-Left Branding (centered on mobile, absolute top-left on desktop) */}
-        <div className="flex items-center gap-2.5 mb-8 md:mb-0 md:absolute md:top-6 md:left-6">
-          <img
-            src={orderflowLogo}
-            alt="Orderflow Logo"
-            className="h-12 md:h-14 w-auto object-contain"
-          />
-        </div>
+      <div className="min-h-screen bg-white lg:grid lg:grid-cols-2">
+        {/* Brand Panel (desktop only) */}
+        <aside className="hidden lg:flex flex-col justify-between bg-slate-900 text-white px-14 py-12">
+          <p className="text-xs font-medium uppercase tracking-widest text-slate-400">
+            Order management ERP
+          </p>
 
-        <div className="w-full max-w-md">
-          {/* Header Branding */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-tx-main tracking-tight">
-              Welcome back
-            </h1>
-            <p className="text-tx-subtle text-sm mt-1">
-              Sign in to your ERP workspace
-            </p>
+          <div className="max-w-md">
+            <h2 className="text-3xl font-semibold leading-snug tracking-tight">
+              Manage orders, inventory and customers from one workspace.
+            </h2>
+            <dl className="mt-10 space-y-6">
+              {features.map((item) => (
+                <div key={item.title} className="border-l-2 border-slate-700 pl-4">
+                  <dt className="text-sm font-semibold text-white">{item.title}</dt>
+                  <dd className="mt-1 text-sm text-slate-400">{item.text}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
 
-          {/* Login Card */}
-          <Card className="p-8">
+          <p className="text-xs text-slate-500">
+            &copy; {new Date().getFullYear()} MommentX. All rights reserved.
+          </p>
+        </aside>
+
+        {/* Form Panel */}
+        <main className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20">
+          <div className="w-full max-w-sm mx-auto">
+            <img
+              src={orderflowLogo}
+              alt="Orderflow"
+              className="h-24 w-auto -ml-5 -mt-4 mb-4 object-contain"
+            />
+
+            <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+              Sign in
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Enter your credentials to access your workspace.
+            </p>
+
             {/* Error Banner */}
-            <Alert type="error" message={error} className="mb-5" />
+            <Alert type="error" message={error} className="mt-6" />
 
             {/* Form Fields */}
-            <div className="space-y-4">
+            <div className="mt-8 space-y-5">
               <Input
-                label="Email Address"
+                label="Email address"
                 type="email"
                 placeholder="you@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                icon={
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-                    />
-                  </svg>
-                }
               />
 
               <Input
                 label="Password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                icon={
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                }
                 rightElement={
                   <a
                     href="#"
-                    className="text-xs text-primary-600 hover:text-primary-700 font-medium transition-colors"
+                    className="text-xs text-slate-500 hover:text-slate-900 font-medium transition-colors"
                   >
                     Forgot password?
                   </a>
@@ -200,16 +199,16 @@ export default function Login() {
 
             {/* On-demand Security Challenge */}
             {showTurnstile && (
-              <div className="mt-5">
+              <div className="mt-6">
                 <p
                   className={`text-xs text-center mb-2 ${
                     turnstileToken
-                      ? "text-success-600 font-medium"
-                      : "text-tx-muted"
+                      ? "text-primary-700 font-medium"
+                      : "text-slate-500"
                   }`}
                 >
                   {turnstileToken
-                    ? "Verification successful! Signing in..."
+                    ? "Verification successful. Signing in..."
                     : "Verifying your browser security..."}
                 </p>
                 <TurnstileWidget
@@ -234,61 +233,35 @@ export default function Login() {
             )}
 
             {/* Login Button */}
-            <Button
+            <button
+              type="button"
               onClick={handleLogin}
-              fullWidth
-              className="mt-6"
               disabled={isLoading || showTurnstile}
+              className="mt-8 w-full rounded-md bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {turnstileToken
-                ? "Verified! Signing in..."
+                ? "Verified. Signing in..."
                 : showTurnstile
                 ? "Waiting for security check..."
-                : "Sign in to Workspace"}
-            </Button>
+                : "Sign in"}
+            </button>
 
             {/* Register Link */}
-            <p className="text-center text-sm text-tx-subtle mt-5">
+            <p className="mt-6 text-sm text-slate-500">
               Don&apos;t have a workspace?{" "}
               <a
                 href="/register"
-                className="text-primary-600 hover:text-primary-700 font-semibold transition-colors"
+                className="font-semibold text-slate-900 hover:underline"
               >
-                Create one free
+                Create one
               </a>
             </p>
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 my-5">
-              <div className="flex-1 h-px bg-base-border-subtle" />
-              <span className="text-xs text-tx-muted">secured connection</span>
-              <div className="flex-1 h-px bg-base-border-subtle" />
-            </div>
-
-            {/* Security Badge */}
-            <div className="flex items-center justify-center gap-2">
-              <div className="flex items-center gap-1.5 bg-base-bg border border-base-border rounded-full px-3.5 py-1.5">
-                <svg
-                  className="w-3.5 h-3.5 text-primary-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span className="text-xs text-tx-muted font-medium">
-                  Secure by{" "}
-                  <span className="text-primary-500 font-semibold">
-                    MommentX Auth
-                  </span>
-                </span>
-              </div>
-            </div>
-          </Card>
-        </div>
+            <p className="mt-12 border-t border-slate-200 pt-5 text-xs text-slate-400">
+              Protected by Cloudflare Turnstile. Secured by MommentX Auth.
+            </p>
+          </div>
+        </main>
       </div>
     </>
   );

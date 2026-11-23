@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { registerUser } from "../services/authService";
 import { useNavigate } from "react-router-dom";
-import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
-import Card from "../components/ui/Card";
 import Alert from "../components/ui/Alert";
 import orderflowLogo from "../assets/orderflow_logo_transparent.png";
 
@@ -46,119 +44,129 @@ export default function Register() {
         }
     };
 
+    const steps = [
+        {
+            title: "Create your account",
+            text: "Register your company and the primary administrator.",
+        },
+        {
+            title: "Add products and customers",
+            text: "Set up your catalogue and customer records.",
+        },
+        {
+            title: "Start taking orders",
+            text: "Track orders, stock and profit from day one.",
+        },
+    ];
+
     return (
-        <div className="min-h-screen bg-linear-to-br from-base-bg to-primary-50 flex flex-col items-center justify-center p-4 md:relative">
-            {/* Top-Left Branding (centered on mobile, absolute top-left on desktop) */}
-            <div className="flex items-center gap-2.5 mb-8 md:mb-0 md:absolute md:top-6 md:left-6">
-                <img
-                    src={orderflowLogo}
-                    alt="Orderflow Logo"
-                    className="h-12 md:h-14 w-auto object-contain"
-                />
-            </div>
+        <div className="min-h-screen bg-white lg:grid lg:grid-cols-2">
+            {/* Brand Panel (desktop only) */}
+            <aside className="hidden lg:flex flex-col justify-between bg-slate-900 text-white px-14 py-12">
+                <p className="text-xs font-medium uppercase tracking-widest text-slate-400">
+                    Order management ERP
+                </p>
 
-            <div className="w-full max-w-md">
-
-                {/* Header Branding */}
-                <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold text-tx-main tracking-tight">Create your workspace</h1>
-                    <p className="text-tx-subtle text-sm mt-1">Set up your ERP account in seconds</p>
+                <div className="max-w-md">
+                    <h2 className="text-3xl font-semibold leading-snug tracking-tight">
+                        Set up your business workspace in a few minutes.
+                    </h2>
+                    <ol className="mt-10 space-y-6">
+                        {steps.map((step, index) => (
+                            <li key={step.title} className="flex gap-4">
+                                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-600 text-xs font-medium text-slate-300">
+                                    {index + 1}
+                                </span>
+                                <div>
+                                    <p className="text-sm font-semibold text-white">{step.title}</p>
+                                    <p className="mt-1 text-sm text-slate-400">{step.text}</p>
+                                </div>
+                            </li>
+                        ))}
+                    </ol>
                 </div>
 
-                {/* Register Card */}
-                <Card className="p-8">
+                <p className="text-xs text-slate-500">
+                    &copy; {new Date().getFullYear()} MommentX. All rights reserved.
+                </p>
+            </aside>
+
+            {/* Form Panel */}
+            <main className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20">
+                <div className="w-full max-w-sm mx-auto">
+                    <img
+                        src={orderflowLogo}
+                        alt="Orderflow"
+                        className="h-24 w-auto -ml-5 -mt-4 mb-4 object-contain"
+                    />
+
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+                        Create your workspace
+                    </h1>
+                    <p className="mt-1 text-sm text-slate-500">
+                        Enter your details to set up your account.
+                    </p>
 
                     {/* Banner */}
-                    <Alert type="error" message={error} className="mb-5" />
-                    {success && <Alert type="success" message="Workspace created successfully! Redirecting..." className="mb-5" />}
+                    <Alert type="error" message={error} className="mt-6" />
+                    {success && <Alert type="success" message="Workspace created successfully! Redirecting..." className="mt-6" />}
 
                     {/* Form Fields */}
-                    <div className="space-y-4">
+                    <div className="mt-8 space-y-5">
                         <Input
-                            label="Company Name"
-                            placeholder="Your Company Name"
+                            label="Company name"
+                            placeholder="Your company name"
                             value={companyName}
                             onChange={(e) => setCompanyName(e.target.value)}
-                            icon={
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                            }
                         />
 
                         <Input
-                            label="Full Name"
-                            placeholder="Your Full Name"
+                            label="Full name"
+                            placeholder="Your full name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            icon={
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            }
                         />
 
                         <Input
-                            label="Email Address"
+                            label="Email address"
                             type="email"
                             placeholder="you@company.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            icon={
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                                </svg>
-                            }
                         />
 
                         <Input
                             label="Password"
                             type="password"
-                            placeholder="Min. 6 characters"
+                            placeholder="Minimum 6 characters"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            icon={
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                            }
                         />
                     </div>
 
                     {/* Register Button */}
-                    <Button onClick={handleRegister} fullWidth className="mt-6" disabled={isLoading || success}>
-                        {isLoading ? "Creating..." : success ? "Redirecting..." : "Create Workspace"}
-                    </Button>
+                    <button
+                        type="button"
+                        onClick={handleRegister}
+                        disabled={isLoading || success}
+                        className="mt-8 w-full rounded-md bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        {isLoading ? "Creating..." : success ? "Redirecting..." : "Create workspace"}
+                    </button>
 
                     {/* Login Link */}
-                    <p className="text-center text-sm text-tx-subtle mt-5">
+                    <p className="mt-6 text-sm text-slate-500">
                         Already have a workspace?{" "}
-                        <a href="/login" className="text-primary-600 hover:text-primary-700 font-semibold transition-colors">
+                        <a href="/login" className="font-semibold text-slate-900 hover:underline">
                             Sign in
                         </a>
                     </p>
 
-                    {/* Divider */}
-                    <div className="flex items-center gap-3 my-5">
-                        <div className="flex-1 h-px bg-base-border-subtle" />
-                        <span className="text-xs text-tx-muted">secured connection</span>
-                        <div className="flex-1 h-px bg-base-border-subtle" />
-                    </div>
-
-                    {/* Security Badge */}
-                    <div className="flex items-center justify-center gap-2">
-                        <div className="flex items-center gap-1.5 bg-base-bg border border-base-border rounded-full px-3.5 py-1.5">
-                            <svg className="w-3.5 h-3.5 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-xs text-tx-muted font-medium">
-                                Secure by <span className="text-primary-500 font-semibold">MommentX Auth</span>
-                            </span>
-                        </div>
-                    </div>
-                </Card>
-
-            </div>
+                    <p className="mt-12 border-t border-slate-200 pt-5 text-xs text-slate-400">
+                        Secured by MommentX Auth.
+                    </p>
+                </div>
+            </main>
         </div>
     );
 }

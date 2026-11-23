@@ -8,6 +8,11 @@ import Alert from "../components/ui/Alert";
 
 const changelogData = [
   {
+    version: "v1.0.8",
+    date: "november 23, 2026",
+    changes: ["adding security features and ui/ux improvements"],
+  },
+  {
     version: "v1.0.5",
     date: "September 22, 2026",
     changes: ["Performance optimization", "Security optimization"],
@@ -83,12 +88,12 @@ export default function Settings() {
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-tx-main mb-6">
+        <h1 className="mb-6 text-2xl font-bold text-tx-main">
           Workspace Settings
         </h1>
 
         <Card className="p-6">
-          <h2 className="text-lg font-bold text-tx-main mb-4">Localization</h2>
+          <h2 className="mb-4 text-lg font-bold text-tx-main">Localization</h2>
 
           {error && <Alert type="error" message={error} className="mb-4" />}
           {success && (
@@ -96,7 +101,7 @@ export default function Settings() {
           )}
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-tx-main mb-2">
+            <label className="block mb-2 text-sm font-medium text-tx-main">
               Default Currency
             </label>
             <select
@@ -110,22 +115,22 @@ export default function Settings() {
                 </option>
               ))}
             </select>
-            <p className="text-xs text-tx-muted mt-2">
+            <p className="mt-2 text-xs text-tx-muted">
               This currency symbol will be used throughout the dashboard and
               reports.
             </p>
           </div>
 
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-tx-main mb-2">
+            <h3 className="mb-2 text-sm font-medium text-tx-main">
               Storefront Link
             </h3>
 
-            <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-4">
+            <div className="p-4 mb-4 border rounded-lg bg-primary-50 border-primary-200">
               <p className="text-sm font-bold text-primary-800">
                 Coming Soon! 🚀
               </p>
-              <p className="text-xs text-primary-700 mt-1">
+              <p className="mt-1 text-xs text-primary-700">
                 We are actively building the public storefront feature. Soon
                 you'll be able to share a unique link with your customers to let
                 them view your products directly!
@@ -161,18 +166,18 @@ export default function Settings() {
                       Copy
                     </Button>
                   </div>
-                  <p className="text-xs text-tx-muted mt-2">
+                  <p className="mt-2 text-xs text-tx-muted">
                     Share this link with your customers to let them view your
                     available products.
                   </p>
                 </>
               ) : (
-                <div className="bg-warning-50 border border-warning-200 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex flex-col items-center justify-between gap-4 p-4 border rounded-lg bg-warning-50 border-warning-200 sm:flex-row">
                   <div>
                     <p className="text-sm font-bold text-warning-800">
                       Pro Feature
                     </p>
-                    <p className="text-xs text-warning-700 mt-1">
+                    <p className="mt-1 text-xs text-warning-700">
                       Upgrade your workspace to the Pro plan to unlock your
                       unique public storefront.
                     </p>
@@ -196,20 +201,20 @@ export default function Settings() {
         </Card>
 
         <Card className="p-6 mt-6">
-          <h2 className="text-lg font-bold text-tx-main mb-4">
+          <h2 className="mb-4 text-lg font-bold text-tx-main">
             Subscription Plan
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-base-surface border border-base-border rounded-lg p-4">
-              <p className="text-sm text-tx-subtle mb-1">Current Plan</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="p-4 border rounded-lg bg-base-surface border-base-border">
+              <p className="mb-1 text-sm text-tx-subtle">Current Plan</p>
               <p className="text-lg font-bold text-tx-main">
                 {user?.subscription?.plan || "Free"}
               </p>
             </div>
 
-            <div className="bg-base-surface border border-base-border rounded-lg p-4">
-              <p className="text-sm text-tx-subtle mb-1">Status</p>
+            <div className="p-4 border rounded-lg bg-base-surface border-base-border">
+              <p className="mb-1 text-sm text-tx-subtle">Status</p>
               <p
                 className={`text-lg font-bold ${user?.subscription?.status === "Active" ? "text-success-500" : "text-danger-500"}`}
               >
@@ -217,8 +222,8 @@ export default function Settings() {
               </p>
             </div>
 
-            <div className="bg-base-surface border border-base-border rounded-lg p-4">
-              <p className="text-sm text-tx-subtle mb-1">Expires On</p>
+            <div className="p-4 border rounded-lg bg-base-surface border-base-border">
+              <p className="mb-1 text-sm text-tx-subtle">Expires On</p>
               <p className="text-lg font-bold text-tx-main">
                 {user?.subscription?.expiresAt
                   ? new Date(user.subscription.expiresAt).toLocaleDateString(
@@ -232,22 +237,22 @@ export default function Settings() {
         </Card>
 
         <Card className="p-6 mt-6">
-          <h2 className="text-lg font-bold text-tx-main mb-4">
+          <h2 className="mb-4 text-lg font-bold text-tx-main">
             System Changelog & Updates
           </h2>
           <div className="space-y-6">
             {changelogData.map((release, index) => (
               <div
                 key={index}
-                className="border-l-2 border-primary-500 pl-4 pb-2"
+                className="pb-2 pl-4 border-l-2 border-primary-500"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-md font-semibold text-tx-main">
+                  <h3 className="font-semibold text-md text-tx-main">
                     {release.version}
                   </h3>
                   <span className="text-xs text-tx-muted">{release.date}</span>
                 </div>
-                <ul className="list-disc list-inside space-y-1">
+                <ul className="space-y-1 list-disc list-inside">
                   {release.changes.map((change, idx) => (
                     <li key={idx} className="text-sm text-tx-subtle">
                       {change}
