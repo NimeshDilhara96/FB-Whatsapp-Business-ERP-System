@@ -35,7 +35,7 @@ const CustomerSidePanel = ({ customer, onClose }) => {
       />
 
       {/* Side Panel */}
-      <div className="fixed inset-y-0 right-0 w-full md:w-[450px] bg-base-surface shadow-2xl z-50 flex flex-col transform transition-transform duration-300 translate-x-0 overflow-hidden border-l border-base-border">
+      <div className="fixed inset-y-0 right-0 w-full md:w-112.5 bg-base-surface shadow-2xl z-50 flex flex-col transform transition-transform duration-300 translate-x-0 overflow-hidden border-l border-base-border">
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-base-border-subtle bg-base-bg shrink-0">
           <h3 className="text-xl font-bold text-tx-main">Customer Profile</h3>

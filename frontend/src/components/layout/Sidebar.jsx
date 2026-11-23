@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import orderflowLogo from "../../assets/orderflow_logo_transparent.png";
 
 export default function Sidebar({ isOpen, onClose }) {
   const logout = useAuthStore((state) => state.logout);
@@ -11,7 +12,7 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Mobile Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-tx-main/20 z-40 md:hidden"
+          className="fixed inset-0 z-40 bg-tx-main/20 md:hidden"
           onClick={onClose}
         />
       )}
@@ -21,27 +22,14 @@ export default function Sidebar({ isOpen, onClose }) {
         className={`fixed inset-y-0 left-0 w-64 bg-base-surface border-r border-base-border flex flex-col shadow-sm z-50 transform transition-transform duration-300 md:relative md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         {/* Logo Area */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-base-border-subtle shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-primary-500 rounded-lg shadow-sm shadow-primary-200 flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-tx-main tracking-tight">
-              OrderFlow
-            </h2>
-          </div>
+        <div className="flex items-center justify-between h-16 px-6 border-b border-base-border-subtle shrink-0">
+          <Link to="/dashboard" onClick={onClose} className="flex items-center">
+            <img
+              src={orderflowLogo}
+              alt="Orderflow Logo"
+              className="object-contain w-auto h-15"
+            />
+          </Link>
           {/* Close button (Mobile only) */}
           <button
             onClick={onClose}
@@ -115,7 +103,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </button>
 
           <div className="mt-4 text-center">
-            <p className="text-xs text-tx-muted font-medium">
+            <p className="text-xs font-medium text-tx-muted">
               ERP System v1.0.2
             </p>
             <p className="text-xs text-tx-subtle mt-0.5">By MommentX</p>

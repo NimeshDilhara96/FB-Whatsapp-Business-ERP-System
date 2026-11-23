@@ -5,6 +5,7 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Card from "../components/ui/Card";
 import Alert from "../components/ui/Alert";
+import orderflowLogo from "../assets/orderflow_logo_transparent.png";
 
 export default function Register() {
     const [companyName, setCompanyName] = useState("");
@@ -46,7 +47,16 @@ export default function Register() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-base-bg to-primary-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-linear-to-br from-base-bg to-primary-50 flex flex-col items-center justify-center p-4 md:relative">
+            {/* Top-Left Branding (centered on mobile, absolute top-left on desktop) */}
+            <div className="flex items-center gap-2.5 mb-8 md:mb-0 md:absolute md:top-6 md:left-6">
+                <img
+                    src={orderflowLogo}
+                    alt="Orderflow Logo"
+                    className="h-12 md:h-14 w-auto object-contain"
+                />
+            </div>
+
             <div className="w-full max-w-md">
 
                 {/* Header Branding */}
