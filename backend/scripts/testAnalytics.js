@@ -19,7 +19,11 @@ async function runTests() {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
       },
-      body: JSON.stringify({ email: EMAIL, password: PASSWORD })
+      body: JSON.stringify({
+        email: EMAIL,
+        password: PASSWORD,
+        turnstileToken: "XXXX.DUMMY.TOKEN.XXXX",
+      })
     });
     const cookieHeader = loginRes.headers.get('set-cookie');
     const tokenMatch = cookieHeader?.match(/accessToken=([^;]+)/);

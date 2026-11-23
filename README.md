@@ -38,8 +38,11 @@
 - **Safe Read-Only Mode:** Backend `subscriptionMiddleware` automatically restricts expired accounts to Read-Only mode—allowing business owners to view data while blocking write actions (`POST`, `PUT`, `PATCH`, `DELETE`) until renewed.
 
 ### 🔒 Enterprise-Grade Security
-- **Strict Cookie-Based Auth:** 100% token storage in `HttpOnly`, `SameSite`, and `Secure` cookies (Zero tokens in `localStorage`, eliminating XSS vulnerabilities).
+- **Cloudflare Turnstile Anti-Bot Protection:** Login flows leverage an on-demand Cloudflare Turnstile CAPTCHA challenge with server-side validation (`/siteverify`), protecting endpoints from brute-force and credential stuffing attacks without degrading user experience.
+- **Strict Cookie-Based Auth & CSRF Mitigation:** 100% token storage in `HttpOnly`, `SameSite=Lax`, and `Secure` cookies with `X-Requested-With` header verification on all mutating requests (Zero tokens in `localStorage`, eliminating XSS and CSRF vulnerabilities).
+- **Hashed Refresh Tokens:** Refresh tokens stored in MongoDB are hashed using SHA-256 with `select: false` on Mongoose schemas to eliminate token theft from database backups or unauthorized API projections.
 - **Silent Refresh Flow:** Dual-token JWT architecture (short-lived access token + rotating refresh token) paired with a `/api/auth/me` source of truth.
+- **Strict Multi-Tenant Query Validation:** All request queries, parameters, and bodies are validated with strict **Zod** schemas (`.strict()`) to eliminate mass assignment and prevent cross-tenant record injection.
 - **Defense in Depth:** Helmet HTTP security headers, CORS origin allowlisting, NoSQL injection sanitization (`express-mongo-sanitize`), IP rate-limiting, and runtime schema validation with **Zod**.
 - **Payload & State Protection:** Critical state (e.g., `costPriceSnapshot`) is strictly resolved server-side to prevent client-side manipulation, as detailed in our comprehensive [Database Security](./backend/docs/DATABASE_SECURITY.md) guidelines.
 
@@ -127,25 +130,24 @@ npm install
 #### Backend Configuration (`backend/.env`)
 ```env
 PORT=5000
-NODE_ENV=production
-CLIENT_URL=https://your-frontend-domain.com
-MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/SERP_db?retryWrites=true&w=majority
+IS_MULTI_TENANT=true
+DEFAULT_TENANT_ID=default-company
+JWT_SECRET=your_jwt_secret_here
+REFRESH_TOKEN_SECRET=your_refresh_token_secret_here
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/SERP_db
+FRONTEND_URL=http://localhost:5173
 
-# JWT Secrets (Use strong 256-bit random keys)
-JWT_ACCESS_SECRET=your_super_secret_access_key
-JWT_REFRESH_SECRET=your_super_secret_refresh_key
-JWT_ACCESS_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
-
-# Cloudinary (Image Uploads)
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+# Cloudflare Turnstile (Anti-Bot Verification)
+TURNSTILE_SECRET_KEY=your_turnstile_secret_key_here
 ```
 
 #### Frontend Configuration (`frontend/.env`)
 ```env
-VITE_API_URL=https://your-backend-domain.com/api
+VITE_API_URL_LOCAL=http://localhost:5000/api
+VITE_API_URL_PROD=https://your-backend.onrender.com/api
+
+# Cloudflare Turnstile (Site Key)
+VITE_TURNSTILE_SITE_KEY=your_turnstile_site_key_here
 ```
 
 ---
@@ -167,11 +169,13 @@ npm run preview
 
 ## 🔒 Security Summary
 
-1. **HttpOnly Cookie Tokens:** Eliminates token theft risks via XSS attacks.
-2. **Strict Multi-Tenant Scoping:** All database read/write operations require an explicit tenant context.
-3. **NoSQL Injection Sanitization:** Proactively filters user input to block operator injection attacks.
-4. **Rate Limiting:** Protects authentication endpoints against credential stuffing and brute-force attempts.
-5. **ACID Transactions:** Ensures absolute inventory consistency and atomic rollbacks.
+1. **Cloudflare Turnstile Anti-Bot:** On-demand challenge verification prevents automated credential stuffing and brute-force logins.
+2. **HttpOnly & SameSite=Lax Cookie Tokens:** Eliminates token theft risks via XSS and blocks CSRF attacks.
+3. **SHA-256 Hashed Refresh Tokens:** Prevents database leakage from exposing active session tokens.
+4. **Strict Multi-Tenant Scoping:** All database read/write operations require an explicit tenant context with strict Zod schema validation.
+5. **NoSQL Injection Sanitization:** Proactively filters user input (`express-mongo-sanitize` + validated query properties) to block operator injection attacks.
+6. **Rate Limiting:** Protects authentication and API endpoints against abusive traffic.
+7. **ACID Transactions:** Ensures absolute inventory consistency and atomic rollbacks during order placement and cancellations.
 
 ---
 

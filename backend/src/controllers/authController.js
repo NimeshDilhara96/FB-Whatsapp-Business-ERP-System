@@ -8,6 +8,41 @@ import crypto from "crypto";
 const hashToken = (token) =>
   crypto.createHash("sha256").update(token).digest("hex");
 
+// Verify Cloudflare Turnstile token
+const verifyTurnstileToken = async (token, remoteIp) => {
+  const secretKey = process.env.TURNSTILE_SECRET_KEY;
+
+  if (!secretKey) {
+    return false;
+  }
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append("secret", secretKey);
+    formData.append("response", token);
+    if (remoteIp) {
+      formData.append("remoteip", remoteIp);
+    }
+
+    const response = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data = await response.json();
+    return Boolean(data.success);
+  } catch {
+    return false;
+  }
+};
+
 // Helper to generate tokens
 const generateTokens = (user) => {
   const accessToken = jwt.sign(
@@ -131,7 +166,14 @@ export const registerTenant = async (req, res) => {
 // LOGIN
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, turnstileToken } = req.body;
+
+    const isHuman = await verifyTurnstileToken(turnstileToken, req.ip);
+    if (!isHuman) {
+      return res.status(400).json({
+        message: "Security challenge verification failed. Please try again.",
+      });
+    }
 
     // We can confidently locate them by their unique email
     const user = await User.findOne({ email }).select("+password");

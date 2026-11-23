@@ -24,7 +24,11 @@ async function getAuthCookie() {
       "Content-Type": "application/json",
       "X-Requested-With": "XMLHttpRequest",
     },
-    body: JSON.stringify({ email: LOAD_TEST_USER.email, password: LOAD_TEST_USER.password }),
+    body: JSON.stringify({
+      email: LOAD_TEST_USER.email,
+      password: LOAD_TEST_USER.password,
+      turnstileToken: "XXXX.DUMMY.TOKEN.XXXX",
+    }),
   });
 
   // If login fails, try to register the dedicated account

@@ -7,15 +7,46 @@ import Input from "../components/ui/Input";
 import Card from "../components/ui/Card";
 import Alert from "../components/ui/Alert";
 import orderflowLogo from "../assets/orderflow_logo_transparent.png";
+import TurnstileWidget from "../components/ui/TurnstileWidget";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [showTurnstile, setShowTurnstile] = useState(false);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const login = useAuthStore((state) => state.login);
+
+  const submitLogin = async (token) => {
+    if (isLoading) return;
+    setError(null);
+    try {
+      setIsLoading(true);
+      const res = await loginUser({ email, password, turnstileToken: token });
+      login(res.data.user);
+
+      if (res.data.user.role === "superadmin") {
+        navigate("/superadmin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      setIsLoading(false);
+      setTurnstileToken("");
+      setShowTurnstile(false);
+      setTurnstileResetKey((prev) => prev + 1);
+      const data = err.response?.data;
+      if (data?.errors) {
+        setError(`Validation Error: ${data.errors.join(", ")}`);
+      } else {
+        setError(data?.message || "Login failed");
+      }
+    }
+  };
 
   const handleLogin = async () => {
     setError(null);
@@ -29,26 +60,13 @@ export default function Login() {
       return setError("Please enter a valid email address.");
     }
 
-        try {
-            setIsLoading(true);
-            const res = await loginUser({ email, password });
-            login(res.data.user);
-            
-            if (res.data.user.role === "superadmin") {
-                navigate("/superadmin/dashboard");
-            } else {
-                navigate("/dashboard");
-            }
-        } catch (err) {
-            setIsLoading(false);
-            const data = err.response?.data;
-            if (data?.errors) {
-                setError(`Validation Error: ${data.errors.join(", ")}`);
-            } else {
-                setError(data?.message || "Login failed");
-            }
-        }
-    };
+    if (!turnstileToken) {
+      setShowTurnstile(true);
+      return;
+    }
+
+    await submitLogin(turnstileToken);
+  };
 
   return (
     <>
@@ -180,14 +198,53 @@ export default function Login() {
               />
             </div>
 
+            {/* On-demand Security Challenge */}
+            {showTurnstile && (
+              <div className="mt-5">
+                <p
+                  className={`text-xs text-center mb-2 ${
+                    turnstileToken
+                      ? "text-success-600 font-medium"
+                      : "text-tx-muted"
+                  }`}
+                >
+                  {turnstileToken
+                    ? "Verification successful! Signing in..."
+                    : "Verifying your browser security..."}
+                </p>
+                <TurnstileWidget
+                  onVerify={(token) => {
+                    setTurnstileToken(token);
+                    setTimeout(() => submitLogin(token), 500);
+                  }}
+                  onExpire={() => {
+                    setTurnstileToken("");
+                    setTurnstileResetKey((prev) => prev + 1);
+                  }}
+                  onError={() => {
+                    setTurnstileToken("");
+                    setShowTurnstile(false);
+                    setError(
+                      "Security verification failed to load. Please try again."
+                    );
+                  }}
+                  resetKey={turnstileResetKey}
+                />
+              </div>
+            )}
+
             {/* Login Button */}
             <Button
               onClick={handleLogin}
               fullWidth
               className="mt-6"
-              disabled={isLoading}
+              disabled={isLoading || showTurnstile}
             >
-              Sign in to Workspace
+              {turnstileToken
+                ? "Verified! Signing in..."
+                : showTurnstile
+                ? "Waiting for security check..."
+                : "Sign in to Workspace"}
             </Button>
 
             {/* Register Link */}

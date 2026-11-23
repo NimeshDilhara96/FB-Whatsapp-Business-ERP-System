@@ -13,17 +13,22 @@ const authLimiter = rateLimit({
   message: { message: "Too many authentication attempts, please try again later." }
 });
 
-const loginSchema = z.object({
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(1, "Password is required")
-});
+const loginSchema = z
+  .object({
+    email: z.string().email("Invalid email format"),
+    password: z.string().min(1, "Password is required"),
+    turnstileToken: z.string().min(1, "Security verification is required"),
+  })
+  .strict();
 
-const registerSchema = z.object({
-  companyName: z.string().min(2, "Company name is too short"),
-  name: z.string().min(2, "Name is too short"),
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(6, "Password must be at least 6 characters")
-});
+const registerSchema = z
+  .object({
+    companyName: z.string().min(2, "Company name is too short"),
+    name: z.string().min(2, "Name is too short"),
+    email: z.string().email("Invalid email format"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+  })
+  .strict();
 
 router.post("/register", authLimiter, validate(registerSchema), registerTenant);
 router.post("/login", authLimiter, validate(loginSchema), login);
