@@ -6,6 +6,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import CustomerSidePanel from "../components/customers/CustomerSidePanel";
+import { Link } from "react-router-dom";
+import {
+  FiChevronDown, FiChevronRight, FiClipboard, FiRotateCcw, FiCheck, FiAlertTriangle, FiPlus
+} from "react-icons/fi";
 
 export default function Dashboard() {
     const user = useAuthStore((state) => state.user);
@@ -40,6 +44,40 @@ export default function Dashboard() {
     } = dashboardData || {};
 
     const pendingOrders = recentPendingOrders;
+    const currency = user?.currency || 'Rs.';
+    const pendingCount = activeFunnel?.Pending || 0;
+
+    // Mobile "Needs attention" list
+    const attentionItems = [
+        {
+            key: 'confirm',
+            to: '/order-management',
+            icon: FiClipboard,
+            iconClass: 'bg-amber-100 text-amber-600',
+            title: 'Orders to confirm',
+            subtitle: `${currency} ${pendingRevenue.toLocaleString()} waiting on COD`,
+            count: pendingCount,
+        },
+        {
+            key: 'returns',
+            to: '/order-management',
+            icon: FiRotateCcw,
+            iconClass: 'bg-orange-100 text-orange-600',
+            title: 'Returns',
+            subtitle: 'Follow up with customer',
+            count: returnedOrdersCount,
+        },
+        {
+            key: 'stock',
+            to: '/products',
+            icon: lowStockCount > 0 ? FiAlertTriangle : FiCheck,
+            iconClass: lowStockCount > 0 ? 'bg-danger-50 text-danger-600' : 'bg-primary-50 text-primary-600',
+            title: 'Low stock',
+            subtitle: lowStockCount > 0 ? `${lowStockCount} product${lowStockCount > 1 ? 's' : ''} running low` : 'All products well stocked',
+            count: lowStockCount,
+        },
+    ];
+    const attentionCount = attentionItems.length;
 
     return (
         <DashboardLayout>
@@ -47,6 +85,101 @@ export default function Dashboard() {
                 customer={selectedCustomer} 
                 onClose={() => setSelectedCustomer(null)} 
             />
+            {/* ───────── Mobile View ───────── */}
+            <div className="md:hidden">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="min-w-0">
+                        <h1 className="text-xl font-bold text-tx-main tracking-tight truncate">
+                            {user?.companyName || "ERP Dashboard"}
+                        </h1>
+                        <p className="text-tx-subtle text-xs mt-0.5">Welcome back, {user?.name || 'Admin'}</p>
+                    </div>
+                    <div className="relative shrink-0">
+                        <select
+                            value={dateFilter}
+                            onChange={(e) => setDateFilter(e.target.value)}
+                            className="appearance-none bg-base-surface border border-base-border rounded-xl pl-3 pr-8 py-2 text-xs font-semibold text-tx-main shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                            <option value="7">Last 7 days</option>
+                            <option value="30">Last 30 days</option>
+                            <option value="all">All time</option>
+                        </select>
+                        <FiChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tx-muted" />
+                    </div>
+                </div>
+
+                {/* Net Profit Hero Card */}
+                <div className="rounded-2xl bg-emerald-800 text-white p-4 shadow-md mb-3">
+                    <p className="text-xs font-medium text-emerald-100">Net profit</p>
+                    <p className="text-3xl font-bold tracking-tight mt-1">
+                        {loading ? "..." : `${currency} ${totalProfit.toLocaleString()}`}
+                    </p>
+                    <div className="border-t border-white/15 mt-4 pt-3 flex items-end justify-between gap-3">
+                        <div>
+                            <p className="text-[11px] text-emerald-100">Collected revenue</p>
+                            <p className="text-sm font-bold">{loading ? "..." : `${currency} ${totalRevenue.toLocaleString()}`}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[11px] text-emerald-100">Inventory value</p>
+                            <p className="text-sm font-bold">{loading ? "..." : `${currency} ${inventoryValue.toLocaleString()}`}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Needs Attention */}
+                <div className="bg-base-surface rounded-2xl border border-base-border-subtle shadow-sm p-4 mb-3">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-bold text-tx-main">Needs attention</h3>
+                        <span className="px-2 py-0.5 text-[11px] font-semibold bg-amber-100 text-amber-700 rounded-full">
+                            {loading ? "..." : `${attentionCount} items`}
+                        </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        {attentionItems.map(({ key, to, icon: Icon, iconClass, title, subtitle, count }) => (
+                            <Link
+                                key={key}
+                                to={to}
+                                className="flex items-center gap-3 py-2 -mx-1 px-1 rounded-lg hover:bg-base-bg transition-colors"
+                            >
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${iconClass}`}>
+                                    <Icon className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-tx-main truncate">{title}</p>
+                                    <p className="text-[11px] text-tx-subtle truncate">{subtitle}</p>
+                                </div>
+                                <span className="text-base font-bold text-tx-main">{loading ? "..." : count}</span>
+                                <FiChevronRight className="w-4 h-4 text-tx-subtle" />
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-base-surface rounded-2xl border border-base-border-subtle shadow-sm p-4">
+                        <p className="text-[11px] text-tx-subtle">Orders today</p>
+                        <p className="text-xl font-bold text-tx-main mt-1">{loading ? "..." : ordersToday}</p>
+                    </div>
+                    <div className="bg-base-surface rounded-2xl border border-base-border-subtle shadow-sm p-4">
+                        <p className="text-[11px] text-tx-subtle">Pending COD</p>
+                        <p className="text-xl font-bold text-tx-main mt-1">{loading ? "..." : `${currency} ${pendingRevenue.toLocaleString()}`}</p>
+                    </div>
+                </div>
+
+                {/* Floating New Order Button */}
+                <Link
+                    to="/orders"
+                    className="fixed right-4 bottom-20 z-30 flex items-center gap-2 bg-emerald-800 hover:bg-emerald-900 text-white text-sm font-semibold pl-4 pr-5 py-3 rounded-full shadow-lg transition-colors"
+                >
+                    <FiPlus className="w-4 h-4" />
+                    New order
+                </Link>
+            </div>
+
+            {/* ───────── Desktop View ───────── */}
+            <div className="hidden md:block">
             <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-tx-main tracking-tight">
@@ -281,6 +414,7 @@ export default function Dashboard() {
                         )}
                     </div>
                 </Card>
+            </div>
             </div>
         </DashboardLayout>
     );
