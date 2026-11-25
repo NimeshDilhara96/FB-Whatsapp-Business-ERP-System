@@ -122,7 +122,7 @@ export const getDashboardStats = async (req, res) => {
               { $limit: 5 },
               { $lookup: { from: "customers", localField: "customerId", foreignField: "_id", as: "customerDoc" } },
               { $unwind: { path: "$customerDoc", preserveNullAndEmptyArrays: true } },
-              { $project: { _id: 1, totalAmount: 1, createdAt: 1, items: 1, "customerId.name": "$customerDoc.name", "customerId._id": "$customerDoc._id" } }
+              { $project: { _id: 1, totalAmount: 1, createdAt: 1, items: 1, source: 1, paymentMethod: 1, "customerId.name": "$customerDoc.name", "customerId._id": "$customerDoc._id", "customerId.whatsappNumber": "$customerDoc.whatsappNumber", "customerId.address": "$customerDoc.address", "customerId.city": "$customerDoc.city", "customerId.notes": "$customerDoc.notes" } }
             ]
         }}
       ]),
