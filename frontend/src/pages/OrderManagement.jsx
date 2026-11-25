@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { getOrders, updateOrderDetails } from "../services/orderService";
@@ -87,12 +87,12 @@ const toWhatsAppNumber = (phone) => {
 const OrderManagement = () => {
   const user = useAuthStore((state) => state.user);
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("new_orders");
   const [historyFilter, setHistoryFilter] = useState("all");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState({});
+  const [limit, setLimit] = useState(10);
   const [sortNewest, setSortNewest] = useState(true);
   const [editingOrder, setEditingOrder] = useState(null);
   const [draftStatus, setDraftStatus] = useState("");
@@ -109,28 +109,59 @@ const OrderManagement = () => {
     { id: "history", label: "History" },
   ];
 
-  const fetchOrders = async (showLoading = true, currentPage = page) => {
-    if (showLoading) setLoading(true);
-    try {
-      const response = await getOrders(currentPage);
-      const payload = response.data || response;
-      
-      if (payload && Array.isArray(payload.data)) {
-        setOrders(payload.data);
-        if (payload.pagination) setPagination(payload.pagination);
-      } else if (Array.isArray(payload)) {
-        setOrders(payload);
+  const loadAllOrders = useCallback(async () => {
+    const response = await getOrders(1, 100);
+    const payload = response.data || response;
+    if (payload && Array.isArray(payload.data)) {
+      let all = payload.data;
+      const totalPages = payload.pagination?.totalPages || 1;
+      if (totalPages > 1) {
+        const extraPages = await Promise.all(
+          Array.from({ length: Math.min(totalPages - 1, 9) }, (_, i) =>
+            getOrders(i + 2, 100)
+          )
+        );
+        for (const res of extraPages) {
+          const p = res.data || res;
+          if (p && Array.isArray(p.data)) {
+            all = all.concat(p.data);
+          }
+        }
       }
-    } catch (err) {
-      console.error("Failed to fetch orders", err);
-    } finally {
-      if (showLoading) setLoading(false);
+      return all;
     }
-  };
+    return Array.isArray(payload) ? payload : [];
+  }, []);
+
+  const fetchOrders = useCallback(
+    async (showLoading = true) => {
+      if (showLoading) setLoading(true);
+      try {
+        const all = await loadAllOrders();
+        setOrders(all);
+      } catch (err) {
+        console.error("Failed to fetch orders", err);
+      } finally {
+        if (showLoading) setLoading(false);
+      }
+    },
+    [loadAllOrders]
+  );
 
   useEffect(() => {
-    fetchOrders(true, 1);
-  }, []);
+    let active = true;
+    loadAllOrders()
+      .then((all) => {
+        if (active) setOrders(all);
+      })
+      .catch((err) => console.error("Failed to fetch orders", err))
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [loadAllOrders]);
 
   const handleDetailsChange = async (orderId, updates) => {
     const order = orders.find((o) => o._id === orderId);
@@ -152,11 +183,11 @@ const OrderManagement = () => {
     try {
       setSavingId(orderId);
       await updateOrderDetails(orderId, updates);
-      await fetchOrders(false, page); // Silent background refresh
+      await fetchOrders(false); // Silent background refresh
     } catch (error) {
       console.error("Failed to update status", error);
       alert("Failed to update status");
-      fetchOrders(false, page); // Revert UI if failed
+      fetchOrders(false); // Revert UI if failed
     } finally {
       setSavingId(null);
     }
@@ -222,28 +253,9 @@ const OrderManagement = () => {
     return "bg-gray-100 text-gray-700 border-gray-200";
   };
 
-  // ── Mobile view helpers ──
+  // ── Shared filtering, sorting & pagination helpers ──
   const currency = user?.currency || "Rs.";
 
-  const sortedOrders = [...filteredOrders].sort((a, b) => {
-    const diff = new Date(b.createdAt) - new Date(a.createdAt);
-    return sortNewest ? diff : -diff;
-  });
-
-  const isLocked = (ord) =>
-    ord.orderStatus === "Cancelled" ||
-    ord.orderStatus === "Returned" ||
-    ord.orderStatus === "Completed";
-
-  const openEditor = (ord) => {
-    setEditingOrder(ord);
-    setDraftStatus(ord.orderStatus);
-    setDraftPayment(ord.paymentStatus || "Pending");
-  };
-
-  const closeEditor = () => setEditingOrder(null);
-
-  // ── Desktop helpers ──
   const searchTerm = search.trim().toLowerCase();
   const visibleOrders = searchTerm
     ? filteredOrders.filter((o) =>
@@ -257,6 +269,51 @@ const OrderManagement = () => {
           .some((v) => String(v).toLowerCase().includes(searchTerm))
       )
     : filteredOrders;
+
+  const sortedOrders = [...visibleOrders].sort((a, b) => {
+    const diff = new Date(b.createdAt) - new Date(a.createdAt);
+    return sortNewest ? diff : -diff;
+  });
+
+  const totalItems = sortedOrders.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit) || 1);
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const paginatedOrders = sortedOrders.slice(
+    (safePage - 1) * limit,
+    safePage * limit
+  );
+
+  const tabPagination = {
+    currentPage: safePage,
+    totalPages,
+    totalItems,
+    limit,
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    setOpenMenuId(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setPage(1);
+    setOpenMenuId(null);
+  };
+
+  const isLocked = (ord) =>
+    ord.orderStatus === "Cancelled" ||
+    ord.orderStatus === "Returned" ||
+    ord.orderStatus === "Completed";
+
+  const openEditor = (ord) => {
+    setEditingOrder(ord);
+    setDraftStatus(ord.orderStatus);
+    setDraftPayment(ord.paymentStatus || "Pending");
+  };
+
+  const closeEditor = () => setEditingOrder(null);
 
   const changeStatus = (ord, status) => {
     setOpenMenuId(null);
@@ -310,6 +367,22 @@ const OrderManagement = () => {
           </button>
         </div>
 
+        {/* Mobile Search */}
+        <label className="relative block mb-3">
+          <span className="sr-only">Search orders</span>
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-tx-subtle pointer-events-none" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Search customer, phone or product"
+            className="w-full h-10 pl-9 pr-3 rounded-xl border border-base-border bg-base-surface text-xs text-tx-main placeholder:text-tx-subtle outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30"
+          />
+        </label>
+
         {/* Tab chips */}
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 mb-2">
           {tabs.map((tab) => {
@@ -318,7 +391,10 @@ const OrderManagement = () => {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setPage(1);
+                }}
                 className={`shrink-0 flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                   active
                     ? "bg-primary-50 border-primary-500 text-primary-700"
@@ -341,7 +417,10 @@ const OrderManagement = () => {
         {activeTab === "history" && (
           <select
             value={historyFilter}
-            onChange={(e) => setHistoryFilter(e.target.value)}
+            onChange={(e) => {
+              setHistoryFilter(e.target.value);
+              setPage(1);
+            }}
             className="w-full mb-3 px-3 py-2 border border-base-border rounded-xl text-sm font-medium text-tx-main bg-base-surface focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="all">All History</option>
@@ -354,11 +433,11 @@ const OrderManagement = () => {
         {/* Order cards */}
         {loading ? (
           <div className="py-10 text-center text-sm text-tx-subtle">Loading orders...</div>
-        ) : sortedOrders.length === 0 ? (
+        ) : paginatedOrders.length === 0 ? (
           <div className="py-10 text-center text-sm text-tx-subtle">No orders found in this category.</div>
         ) : (
           <div className="flex flex-col gap-3">
-            {sortedOrders.map((ord) => {
+            {paginatedOrders.map((ord) => {
               const phone = ord.customerId?.whatsappNumber;
               const locked = isLocked(ord);
               const paid = (ord.paymentStatus || "Pending") === "Paid";
@@ -457,11 +536,10 @@ const OrderManagement = () => {
         )}
 
         <Pagination
-          pagination={pagination}
-          onPageChange={(newPage) => {
-            setPage(newPage);
-            fetchOrders(true, newPage);
-          }}
+          pagination={tabPagination}
+          onPageChange={handlePageChange}
+          onLimitChange={handleLimitChange}
+          itemLabel="orders"
         />
 
         {/* Order details / update status sheet */}
@@ -636,7 +714,10 @@ const OrderManagement = () => {
               <input
                 type="search"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
                 placeholder="Search customer, phone or product"
                 className="w-64 lg:w-80 h-10 pl-9 pr-3 rounded-lg border border-base-border bg-base-surface text-sm text-tx-main placeholder:text-tx-subtle outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30"
               />
@@ -665,6 +746,7 @@ const OrderManagement = () => {
                     aria-selected={active}
                     onClick={() => {
                       setActiveTab(tab.id);
+                      setPage(1);
                       setOpenMenuId(null);
                     }}
                     className={`relative flex items-center gap-2 px-4 h-12 text-sm font-medium transition-colors ${
@@ -690,7 +772,10 @@ const OrderManagement = () => {
             {activeTab === "history" && (
               <select
                 value={historyFilter}
-                onChange={(e) => setHistoryFilter(e.target.value)}
+                onChange={(e) => {
+                  setHistoryFilter(e.target.value);
+                  setPage(1);
+                }}
                 aria-label="Filter history"
                 className="mr-2 h-9 px-3 border border-base-border rounded-lg text-sm text-tx-main bg-base-surface focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
               >
@@ -742,7 +827,7 @@ const OrderManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {visibleOrders.map((ord) => {
+                {paginatedOrders.map((ord) => {
                   const locked = isLocked(ord);
                   const paid = (ord.paymentStatus || "Pending") === "Paid";
                   const saving = savingId === ord._id;
@@ -952,12 +1037,10 @@ const OrderManagement = () => {
 
           <div className="px-5 pb-4">
             <Pagination
-              pagination={pagination}
-              onPageChange={(newPage) => {
-                setPage(newPage);
-                setOpenMenuId(null);
-                fetchOrders(true, newPage);
-              }}
+              pagination={tabPagination}
+              onPageChange={handlePageChange}
+              onLimitChange={handleLimitChange}
+              itemLabel="orders"
             />
           </div>
         </div>
